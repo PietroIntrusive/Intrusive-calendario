@@ -7,112 +7,564 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-deep: #050505; --red: #e63022; --orange: #ff6b1a; --white: #f0ece4; --gray: #666; --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); }
+        :root {
+            --bg-deep: #050505;
+            --red: #e63022;
+            --orange: #ff6b1a;
+            --white: #f0ece4;
+            --gray: #666;
+            --green: #5cdb5c;
+            --glass: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
         body { background: var(--bg-deep); color: var(--white); font-family: 'Barlow Condensed', sans-serif; min-height: 100vh; overflow-x: hidden; }
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(50px); }
-        .login-card { background: var(--glass); padding: 50px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 450px; width: 90%; }
-        .header { padding: 50px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .intrusive-brand { font-weight: 900; font-size: 85px; color: var(--red); line-height: 0.7; letter-spacing: -2px; }
-        .master-layout { display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 180px); }
-        .activity-sidebar { border-right: 1px solid var(--border); padding: 30px; overflow-y: auto; }
-        .calendar-container { padding: 40px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; overflow-y: auto; }
-        .day-cell { aspect-ratio: 1; background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .day-cell:hover { border-color: var(--red); transform: translateY(-5px); }
-        .btn-premium { background: var(--red); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; }
-        .expansion-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(35px); z-index: 5000; display: none; padding: 60px; justify-content: center; align-items: center; opacity: 0; transition: 0.6s; }
-        .expansion-overlay.show { display: flex; opacity: 1; }
-        .task-card { background: var(--glass); border-radius: 20px; padding: 25px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; align-items: center; gap: 20px; }
-        .check-box { width: 28px; height: 28px; border: 2px solid var(--red); border-radius: 8px; cursor: pointer; }
+
+        /* ── LOGIN ── */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.4s;
+        }
+        #loginOverlay.fade-out { opacity: 0; pointer-events: none; }
+        .login-card {
+            background: var(--glass); padding: 50px; border-radius: 30px;
+            border: 1px solid var(--border); text-align: center;
+            max-width: 450px; width: 90%;
+        }
+        .login-input {
+            width: 100%; background: transparent; color: var(--white);
+            text-align: center; outline: none; display: block;
+            margin-bottom: 20px; padding-bottom: 8px;
+        }
+        #userName    { font-family: 'Bebas Neue'; font-size: 26px; border-bottom: 2px solid var(--red); }
+        #userAvatar  { font-family: 'Barlow Condensed'; font-size: 14px; border-bottom: 1px solid var(--gray); }
+        .login-error { color: var(--red); font-size: 13px; letter-spacing: 1px; min-height: 18px; margin-bottom: 10px; }
+
+        /* ── HEADER ── */
+        .header {
+            padding: 24px 40px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100; background: var(--bg-deep);
+        }
+        .intrusive-brand { font-family: 'Bebas Neue'; color: var(--red); letter-spacing: -1px; line-height: 1; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .sync-dot {
+            font-size: 11px; letter-spacing: 2px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .sync-dot::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--gray); display: inline-block;
+            transition: background 0.3s;
+        }
+        .sync-dot.live::before { background: var(--green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .presence-avatar {
+            width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--green); transition: transform 0.2s;
+        }
+        .presence-avatar:hover { transform: scale(1.1); }
+        .presence-avatar.offline { border-color: #333; filter: grayscale(0.8); opacity: 0.6; }
+
+        /* ── LAYOUT ── */
+        .master-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 80px); }
+
+        /* ── SIDEBAR ── */
+        .activity-sidebar {
+            border-right: 1px solid var(--border); padding: 24px;
+            overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .sidebar-title {
+            font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 3px;
+            color: var(--red); margin-bottom: 14px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+        .log-entry {
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+            font-size: 13px; color: var(--gray); line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        .log-user { color: var(--white); font-weight: 700; }
+        .log-time { font-size: 10px; color: #444; letter-spacing: 1px; margin-top: 2px; }
+        .log-empty { color: #333; font-size: 13px; text-align: center; padding: 30px 0; letter-spacing: 2px; }
+
+        /* ── CALENDAR ── */
+        .calendar-container { padding: 30px 36px; overflow-y: auto; }
+        .month-section { margin-bottom: 44px; }
+        .month-header {
+            font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 3px;
+            color: var(--white); margin-bottom: 10px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .month-header span { color: var(--red); }
+        .weekdays-row {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 5px;
+        }
+        .weekday-lbl {
+            text-align: center; font-size: 10px; letter-spacing: 2px;
+            color: #333; padding: 3px 0;
+        }
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+
+        .day-cell {
+            aspect-ratio: 1; background: var(--glass);
+            border: 1px solid var(--border); padding: 10px;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column;
+            align-items: flex-start; justify-content: space-between;
+            position: relative; overflow: hidden;
+        }
+        .day-cell:hover:not(.cell-empty):not(.cell-outrange) {
+            border-color: var(--red); transform: translateY(-3px);
+            background: rgba(230,48,34,0.05);
+        }
+        .day-cell.cell-empty, .day-cell.cell-outrange { background: transparent; border-color: transparent; cursor: default; opacity: 0.15; }
+        .day-cell.cell-today { border-color: var(--orange); background: rgba(255,107,26,0.06); }
+        .day-cell.cell-done  { border-color: var(--green);  background: rgba(92,219,92,0.05); }
+        .day-cell.cell-past:not(.cell-done) { opacity: 0.4; }
+
+        .cell-num { font-family: 'Bebas Neue'; font-size: 20px; line-height: 1; color: var(--white); }
+        .cell-today .cell-num  { color: var(--orange); }
+        .cell-done  .cell-num  { color: var(--green); }
+
+        .phase-bar { width: 100%; height: 3px; border-radius: 2px; margin-top: auto; }
+        .cell-badge {
+            position: absolute; top: 5px; right: 6px;
+            font-size: 9px; color: var(--gray); font-family: 'Space Mono';
+        }
+        .cell-check { position: absolute; bottom: 5px; right: 6px; font-size: 12px; color: var(--green); }
+
+        /* ── EXPANSION OVERLAY ── */
+        /* FIX: usa visibility+opacity em vez de display+opacity (display não transiciona) */
+        .expansion-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(24px);
+            z-index: 5000; display: flex; padding: 40px;
+            justify-content: center; align-items: center;
+            visibility: hidden; opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .expansion-overlay.show { visibility: visible; opacity: 1; }
+        .expansion-content {
+            width: 100%; max-width: 780px; background: #080808;
+            border: 1px solid var(--border); padding: 40px; border-radius: 20px;
+            max-height: 88vh; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .ex-date { font-family: 'Bebas Neue'; font-size: 80px; color: var(--red); line-height: 1; }
+        .ex-phase-badge {
+            display: inline-block; font-size: 11px; letter-spacing: 3px;
+            padding: 4px 12px; border-radius: 2px; margin-bottom: 24px;
+            font-family: 'Barlow Condensed'; font-weight: 600;
+        }
+        .ex-phase-badge.hidden { display: none; }
+
+        /* ── TASKS ── */
+        .task-card {
+            background: var(--glass); border-radius: 12px;
+            padding: 14px 18px; border: 1px solid var(--border);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
+            transition: border-color 0.2s, opacity 0.2s;
+            animation: fadeIn 0.2s ease;
+        }
+        .task-card:hover { border-color: rgba(255,255,255,0.14); }
+        .task-card.task-done { opacity: 0.45; }
+        .task-card.task-done .task-text { text-decoration: line-through; color: var(--gray); }
+
+        .check-box {
+            width: 22px; height: 22px; min-width: 22px;
+            border: 2px solid var(--red); border-radius: 5px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; font-size: 13px;
+        }
+        .check-box.checked { background: var(--red); color: white; }
+
+        .task-text { flex: 1; font-size: 15px; line-height: 1.3; }
+        .task-author { font-size: 11px; color: #444; white-space: nowrap; }
+        .task-del {
+            width: 22px; height: 22px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; color: #444;
+            font-size: 14px; border-radius: 4px; transition: all 0.15s;
+        }
+        .task-del:hover { color: var(--red); background: rgba(230,48,34,0.1); }
+
+        .tasks-empty { text-align: center; padding: 36px; color: #333; font-size: 13px; letter-spacing: 3px; }
+
+        /* ── BUTTONS ── */
+        .btn-premium {
+            background: var(--red); color: white; border: none;
+            padding: 11px 26px; border-radius: 10px;
+            font-family: 'Bebas Neue'; font-size: 17px; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.2s; margin-top: 14px;
+        }
+        .btn-premium:hover { background: var(--orange); transform: translateY(-1px); }
+        .btn-outline {
+            background: transparent; color: var(--gray);
+            border: 1px solid var(--border); padding: 10px 20px;
+            border-radius: 10px; font-family: 'Bebas Neue'; font-size: 16px;
+            letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+            margin-top: 14px; margin-left: 8px;
+        }
+        .btn-outline:hover { border-color: var(--red); color: var(--red); }
+        .btn-outline.day-done { border-color: var(--green); color: var(--green); }
+        .btn-actions { display: flex; flex-wrap: wrap; gap: 0; }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); }
     </style>
 </head>
-<body id="dynamicBody">
-    <div id="loginOverlay">
-        <div class="login-card">
-            <div class="intrusive-brand" style="font-size: 60px; margin-bottom: 10px;">INTRUSIVE</div>
-            <input type="text" id="userName" placeholder="NOME" style="width: 100%; background: transparent; border-bottom: 2px solid var(--red); color: white; font-size: 24px; text-align: center; margin-bottom: 20px; outline: none; font-family: 'Bebas Neue';">
-            <input type="text" id="userAvatar" placeholder="LINK FOTO (URL)" style="width: 100%; background: transparent; border-bottom: 1px solid var(--gray); color: white; font-size: 14px; text-align: center; margin-bottom: 40px; outline: none;">
-            <button class="btn-premium" onclick="initCommandCenter()">INICIAR SESSÃO</button>
+<body>
+
+<!-- LOGIN -->
+<div id="loginOverlay">
+    <div class="login-card">
+        <div class="intrusive-brand" style="font-size: 54px; margin-bottom: 6px;">INTRUSIVE</div>
+        <div style="font-size: 11px; letter-spacing: 5px; color: var(--gray); margin-bottom: 30px;">COMMAND CENTER</div>
+        <input id="userName"   class="login-input" placeholder="SEU NOME" type="text">
+        <input id="userAvatar" class="login-input" placeholder="LINK DA FOTO (OPCIONAL)" type="text" style="margin-bottom: 30px;">
+        <div class="login-error" id="loginError"></div>
+        <button class="btn-premium" style="width:100%; margin-top:0;" onclick="initCommandCenter()">INICIAR SESSÃO</button>
+    </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+    <div style="display:flex; align-items:baseline; gap:12px;">
+        <div class="intrusive-brand" style="font-size:34px;">INTRUSIVE</div>
+        <div style="font-size:11px; letter-spacing:3px; color:var(--gray);">COMMAND CENTER</div>
+    </div>
+    <div class="header-right">
+        <div class="sync-dot" id="syncStatus">OFFLINE</div>
+        <div id="presenceBar" style="display:flex; gap:6px; align-items:center;"></div>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="master-layout">
+    <div class="activity-sidebar">
+        <div class="sidebar-title">ATIVIDADE</div>
+        <div id="logContainer"><div class="log-empty">AGUARDANDO ATIVIDADE</div></div>
+    </div>
+    <div class="calendar-container" id="calendarArea"></div>
+</div>
+
+<!-- DAY EXPANSION -->
+<div id="dayExpansion" class="expansion-overlay" onclick="closeDay()">
+    <div class="expansion-content" onclick="event.stopPropagation()">
+        <div class="ex-header">
+            <div class="ex-date" id="exDate">--/--</div>
+            <button class="btn-outline" onclick="closeDay()" style="margin:0; align-self:flex-start;">✕ FECHAR</button>
+        </div>
+        <div id="exPhaseBadge" class="ex-phase-badge hidden"></div>
+        <div id="taskList"></div>
+        <div class="btn-actions">
+            <button class="btn-premium" onclick="createNewTask()">+ NOVA TAREFA</button>
+            <button class="btn-outline" id="dayDoneBtn" onclick="toggleDayDone()">MARCAR DIA COMO FEITO</button>
         </div>
     </div>
-    <div class="header">
-        <div class="intrusive-brand" style="font-size: 40px;">INTRUSIVE</div>
-        <div id="presenceBar" style="display: flex; gap: 10px;"></div>
-    </div>
-    <div class="master-layout">
-        <div class="activity-sidebar"><div id="logContainer"></div></div>
-        <div class="calendar-container" id="calendarGrid"></div>
-    </div>
-    <div id="dayExpansion" class="expansion-overlay" onclick="closeDay()">
-        <div class="expansion-content" onclick="event.stopPropagation()" style="width: 100%; max-width: 800px; background: #000; padding: 40px; border-radius: 20px;">
-            <div id="exDate" style="font-family: 'Bebas Neue'; font-size: 100px; color: var(--red);">--/--</div>
-            <div id="taskList"></div>
-            <button class="btn-premium" onclick="createNewTask()">+ TAREFA</button>
-        </div>
-    </div>
-    <script>
-        const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
-        const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
-        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-        let user = { name: '', photo: '', start: Date.now() };
-        let currentDay = '';
-        let dataCache = { tasks: [], presence: [] };
+</div>
 
-        async function initCommandCenter() {
-            const name = document.getElementById('userName').value.trim();
-            if(!name) return alert("Digite seu nome.");
-            user.name = name;
-            user.photo = document.getElementById('userAvatar').value.trim() || `https://ui-avatars.com/api/?name=${name}&background=e63022&color=fff`;
-            document.getElementById('loginOverlay').style.display = 'none';
-            await loadInitialData();
-            renderCalendar();
-            setInterval(heartbeat, 15000);
-        }
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
+const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
 
-        async function loadInitialData() {
-            const { data: t } = await supabase.from('tasks').select('*');
-            const { data: p } = await supabase.from('team_presence').select('*');
-            dataCache.tasks = t || [];
-            dataCache.presence = p || [];
-            updateUI();
-        }
+// FIX CRÍTICO: renomeado de 'supabase' para 'db'
+// O CDN já define window.supabase globalmente — redeclarar com const gera
+// "Identifier 'supabase' has already been declared" e mata todo o script.
+const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            for(let i = 12; i <= 42; i++) {
-                const d = i > 31 ? i - 31 : i;
-                const m = i > 31 ? '06' : '05';
-                const ds = `2026-${m}-${String(d).padStart(2, '0')}`;
-                const div = document.createElement('div');
-                div.className = 'day-cell';
-                div.innerHTML = `<div style="font-size: 24px; color: var(--red);">${d}</div><div>${m}/26</div>`;
-                div.onclick = () => { currentDay = ds; document.getElementById('exDate').innerText = d+'/'+m; document.getElementById('dayExpansion').classList.add('show'); renderTasks(); };
-                grid.appendChild(div);
+// ── ESTADO ─────────────────────────────────────────────────────────────────
+let user       = { name: '', photo: '' };
+let currentDay = '';
+let actLog     = [];
+let cache      = { tasks: [], presence: [], doneDays: [] };
+
+// ── FASES ──────────────────────────────────────────────────────────────────
+const PHASES = {
+    1: { name: 'FUNDAÇÃO',       color: '#1D9E75', s: '2026-05-12', e: '2026-05-25' },
+    2: { name: 'IDENTIDADE',     color: '#378ADD', s: '2026-05-26', e: '2026-06-08' },
+    3: { name: 'PRODUÇÃO',       color: '#BA7517', s: '2026-06-09', e: '2026-06-22' },
+    4: { name: 'PRÉ-LANÇAMENTO', color: '#A32D2D', s: '2026-06-23', e: '2026-07-07' },
+    5: { name: 'LANÇAMENTO',     color: '#1D9E75', s: '2026-07-08', e: '2026-07-12' },
+};
+function getPhase(ds) {
+    for (const [n, p] of Object.entries(PHASES))
+        if (ds >= p.s && ds <= p.e) return { num: parseInt(n), ...p };
+    return null;
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+async function initCommandCenter() {
+    const name = document.getElementById('userName').value.trim();
+    if (!name) {
+        document.getElementById('loginError').textContent = 'DIGITE SEU NOME PARA ENTRAR.';
+        return;
+    }
+    user.name  = name;
+    user.photo = document.getElementById('userAvatar').value.trim() ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e63022&color=fff&bold=true`;
+
+    const overlay = document.getElementById('loginOverlay');
+    overlay.classList.add('fade-out');
+    setTimeout(() => overlay.style.display = 'none', 400);
+
+    setSyncStatus(false);
+    await loadData();
+    renderCalendar();
+    subscribeRealtime();
+    heartbeat();
+    setInterval(heartbeat, 20000);
+}
+
+document.getElementById('userName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') initCommandCenter();
+});
+
+// ── DADOS ──────────────────────────────────────────────────────────────────
+async function loadData() {
+    try {
+        const [{ data: t, error: te }, { data: p }, { data: d }] = await Promise.all([
+            db.from('tasks').select('*').order('created_at', { ascending: true }),
+            db.from('team_presence').select('*'),
+            db.from('done_days').select('date_id'),
+        ]);
+        if (te) throw te;
+        cache.tasks    = t || [];
+        cache.presence = p || [];
+        cache.doneDays = (d || []).map(r => r.date_id);
+        updatePresenceBar();
+        setSyncStatus(true);
+    } catch (err) {
+        setSyncStatus(false);
+        console.error('[INTRUSIVE] Supabase error:', err);
+    }
+}
+
+// ── REALTIME (adição minha — polling a cada 20s não é realtime real) ────────
+function subscribeRealtime() {
+    db.channel('intrusive-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
+            const row = payload.new || payload.old;
+            if (payload.eventType === 'INSERT') {
+                if (!cache.tasks.find(t => t.id === row.id)) cache.tasks.push(row);
+                if (row.created_by !== user.name) addLog(`${row.created_by} adicionou tarefa em ${row.date_id}`);
+            } else if (payload.eventType === 'UPDATE') {
+                cache.tasks = cache.tasks.map(t => t.id === row.id ? row : t);
+            } else if (payload.eventType === 'DELETE') {
+                cache.tasks = cache.tasks.filter(t => t.id !== row.id);
             }
-        }
+            if (currentDay && currentDay === row?.date_id) renderTasks();
+            renderCalendar();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_presence' }, payload => {
+            const row = payload.new;
+            const idx = cache.presence.findIndex(p => p.user_name === row?.user_name);
+            if (idx >= 0) cache.presence[idx] = row; else if (row) cache.presence.push(row);
+            updatePresenceBar();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'done_days' }, payload => {
+            if (payload.eventType === 'INSERT') {
+                const ds = payload.new.date_id;
+                if (!cache.doneDays.includes(ds)) {
+                    cache.doneDays.push(ds);
+                    if (payload.new.marked_by !== user.name) addLog(`${payload.new.marked_by} concluiu o dia ${ds}`);
+                }
+            } else if (payload.eventType === 'DELETE') {
+                cache.doneDays = cache.doneDays.filter(d => d !== payload.old.date_id);
+            }
+            renderCalendar();
+            if (currentDay) updateDayDoneBtn();
+        })
+        .subscribe();
+}
 
-        function renderTasks() {
-            const list = document.getElementById('taskList');
-            list.innerHTML = dataCache.tasks.filter(t => t.date_id === currentDay).map(t => `<div class="task-card"><div>${t.task_text}</div></div>`).join('');
-        }
+// ── CALENDÁRIO ─────────────────────────────────────────────────────────────
+const MONTHS   = [{y:2026,m:4,n:'MAIO'},{y:2026,m:5,n:'JUNHO'},{y:2026,m:6,n:'JULHO'}];
+const WDAYS    = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+const TODAY    = '2026-05-12';
+function inRange(ds)  { return ds >= '2026-05-12' && ds <= '2026-07-12'; }
+function isPast(ds)   { return ds < TODAY; }
+function dStr(y,m,d)  { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 
-        async function createNewTask() {
-            const txt = prompt("Tarefa:");
-            if(txt) await supabase.from('tasks').insert({ date_id: currentDay, task_text: txt, created_by: user.name });
-            loadInitialData().then(renderTasks);
+function renderCalendar() {
+    const area = document.getElementById('calendarArea');
+    area.innerHTML = '';
+    MONTHS.forEach(({ y, m, n }) => {
+        const firstDay  = new Date(y, m, 1).getDay();
+        const lastDay   = new Date(y, m + 1, 0).getDate();
+        let html = `<div class="month-section">
+            <div class="month-header">${n.slice(0,-1)}<span>${n.slice(-1)}</span> ${y}</div>
+            <div class="weekdays-row">${WDAYS.map(w=>`<div class="weekday-lbl">${w}</div>`).join('')}</div>
+            <div class="days-grid">`;
+        for (let i = 0; i < firstDay; i++) html += '<div class="day-cell cell-empty"></div>';
+        for (let d = 1; d <= lastDay; d++) {
+            const ds    = dStr(y, m, d);
+            const ir    = inRange(ds);
+            const ph    = getPhase(ds);
+            const done  = cache.doneDays.includes(ds);
+            const today = ds === TODAY;
+            const past  = isPast(ds);
+            const tCnt  = cache.tasks.filter(t => t.date_id === ds).length;
+            if (!ir) { html += `<div class="day-cell cell-outrange"><div class="cell-num">${d}</div></div>`; continue; }
+            let cls = 'day-cell';
+            if      (done)  cls += ' cell-done';
+            else if (today) cls += ' cell-today';
+            else if (past)  cls += ' cell-past';
+            const phColor = ph ? ph.color : 'transparent';
+            html += `<div class="${cls}" onclick="openDay('${ds}')">
+                ${tCnt > 0 ? `<div class="cell-badge">${tCnt}</div>` : ''}
+                <div class="cell-num">${d}</div>
+                <div class="phase-bar" style="background:${phColor}"></div>
+                ${done ? '<div class="cell-check">✓</div>' : ''}
+            </div>`;
         }
+        html += '</div></div>';
+        area.innerHTML += html;
+    });
+}
 
-        function closeDay() { document.getElementById('dayExpansion').classList.remove('show'); }
+// ── OVERLAY DO DIA ─────────────────────────────────────────────────────────
+function openDay(ds) {
+    currentDay = ds;
+    const d  = new Date(ds + 'T00:00:00');
+    document.getElementById('exDate').textContent =
+        `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    const ph    = getPhase(ds);
+    const badge = document.getElementById('exPhaseBadge');
+    if (ph) {
+        badge.textContent     = `FASE ${ph.num} — ${ph.name}`;
+        badge.style.background = ph.color + '20';
+        badge.style.border     = `1px solid ${ph.color}`;
+        badge.style.color      = ph.color;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+    document.getElementById('dayExpansion').classList.add('show');
+    renderTasks();
+    updateDayDoneBtn();
+}
 
-        async function heartbeat() {
-            await supabase.from('team_presence').upsert({ user_name: user.name, avatar_url: user.photo, is_online: true, last_seen: new Date().toISOString() });
-            loadInitialData();
-        }
+function closeDay() { document.getElementById('dayExpansion').classList.remove('show'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDay(); });
 
-        function updateUI() {
-            document.getElementById('presenceBar').innerHTML = dataCache.presence.map(p => `<img src="${p.avatar_url}" style="width:30px; border-radius:50%; border: 2px solid ${p.is_online ? '#5cdb5c' : '#444'}">`).join('');
-        }
-    </script>
+function updateDayDoneBtn() {
+    const btn = document.getElementById('dayDoneBtn');
+    if (cache.doneDays.includes(currentDay)) {
+        btn.textContent = '✓ DIA CONCLUÍDO — DESMARCAR';
+        btn.classList.add('day-done');
+    } else {
+        btn.textContent = 'MARCAR DIA COMO FEITO';
+        btn.classList.remove('day-done');
+    }
+}
+
+// ── TAREFAS ────────────────────────────────────────────────────────────────
+function renderTasks() {
+    const dayTasks = cache.tasks.filter(t => t.date_id === currentDay);
+    const list     = document.getElementById('taskList');
+    if (!dayTasks.length) {
+        list.innerHTML = '<div class="tasks-empty">NENHUMA TAREFA — ADICIONE UMA</div>';
+        return;
+    }
+    list.innerHTML = dayTasks.map(t => `
+        <div class="task-card ${t.is_done ? 'task-done' : ''}">
+            <div class="check-box ${t.is_done ? 'checked' : ''}" onclick="toggleTask('${t.id}')">${t.is_done ? '✓' : ''}</div>
+            <div class="task-text">${escHtml(t.task_text)}</div>
+            <div class="task-author">${escHtml(t.created_by || '')}</div>
+            <div class="task-del" onclick="deleteTask('${t.id}')">✕</div>
+        </div>`).join('');
+}
+
+async function createNewTask() {
+    const txt = prompt('Nova tarefa:');
+    if (!txt || !txt.trim()) return;
+    const { error } = await db.from('tasks').insert({
+        date_id: currentDay, task_text: txt.trim(),
+        created_by: user.name, is_done: false,
+    });
+    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+    addLog(`Você adicionou tarefa em ${currentDay}`);
+    await loadData();
+    renderTasks();
+    renderCalendar();
+}
+
+async function toggleTask(id) {
+    const task = cache.tasks.find(t => t.id === id);
+    if (!task) return;
+    const { error } = await db.from('tasks').update({ is_done: !task.is_done }).eq('id', id);
+    if (!error) { task.is_done = !task.is_done; renderTasks(); renderCalendar(); }
+}
+
+async function deleteTask(id) {
+    if (!confirm('Excluir esta tarefa?')) return;
+    const { error } = await db.from('tasks').delete().eq('id', id);
+    if (!error) { cache.tasks = cache.tasks.filter(t => t.id !== id); renderTasks(); renderCalendar(); }
+}
+
+async function toggleDayDone() {
+    if (!currentDay) return;
+    const isDone = cache.doneDays.includes(currentDay);
+    if (isDone) {
+        await db.from('done_days').delete().eq('date_id', currentDay);
+        cache.doneDays = cache.doneDays.filter(d => d !== currentDay);
+    } else {
+        const { error } = await db.from('done_days').insert({ date_id: currentDay, marked_by: user.name });
+        if (error) { alert('Erro: ' + error.message + '\n\nCrie a tabela done_days no Supabase.'); return; }
+        cache.doneDays.push(currentDay);
+        addLog(`Você concluiu o dia ${currentDay}`);
+    }
+    renderCalendar();
+    updateDayDoneBtn();
+}
+
+// ── PRESENÇA ───────────────────────────────────────────────────────────────
+async function heartbeat() {
+    try {
+        await db.from('team_presence').upsert({
+            user_name: user.name, avatar_url: user.photo,
+            is_online: true, last_seen: new Date().toISOString(),
+        }, { onConflict: 'user_name' });
+        await loadData();
+    } catch(e) {}
+}
+
+function updatePresenceBar() {
+    const now = Date.now();
+    document.getElementById('presenceBar').innerHTML = cache.presence.map(p => {
+        const online = (now - new Date(p.last_seen).getTime()) < 60000;
+        return `<img src="${p.avatar_url}" class="presence-avatar ${online?'':'offline'}"
+            title="${p.user_name}${online?'':' (offline)'}" alt="${p.user_name}">`;
+    }).join('');
+}
+
+// ── ACTIVITY LOG ───────────────────────────────────────────────────────────
+function addLog(msg) {
+    const t   = new Date();
+    const hm  = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    actLog.unshift({ msg, hm, who: user.name });
+    if (actLog.length > 40) actLog.pop();
+    const el = document.getElementById('logContainer');
+    el.innerHTML = actLog.map(e =>
+        `<div class="log-entry"><span class="log-user">${escHtml(e.who)}</span> ${escHtml(e.msg)}<div class="log-time">${e.hm}</div></div>`
+    ).join('');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function setSyncStatus(live) {
+    const el = document.getElementById('syncStatus');
+    el.textContent = live ? 'AO VIVO' : 'OFFLINE';
+    el.classList.toggle('live', live);
+}
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
 </body>
 </html>

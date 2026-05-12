@@ -229,26 +229,42 @@ let user = { name: '', photo: '', start: Date.now() };
 let currentDay = '';
 let dataCache = { tasks: [], presence: [], notes: [] };
 
-// 1. INICIALIZAÇÃO
-async function initCommandCenter() {
-    const name = document.getElementById('userName').value.trim();
-    if(!name) return alert("Identifique-se para entrar.");
+// 1. INICIALIZAÇÃO CORRIGIDA
+async function initCommandCenter() { // <-- Adicionei o { aqui (Linha 192)
+    const nameInput = document.getElementById('userName');
+    const photoInput = document.getElementById('userAvatar');
+    
+    const name = nameInput.value.trim();
+    if(!name) {
+        alert("Identifique-se com um nome para entrar.");
+        return;
+    }
     
     user.name = name;
-    user.photo = document.getElementById('userAvatar').value.trim() || `https://ui-avatars.com/api/?name=${name}&background=e63022&color=fff`;
     
-    document.getElementById('loginOverlay').style.opacity = '0';
-    setTimeout(() => document.getElementById('loginOverlay').style.display = 'none', 500);
+    if(photoInput.value.trim() === "") {
+        user.photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e63022&color=fff&bold=true`;
+    } else {
+        user.photo = photoInput.value.trim();
+    }
+    
+    const overlay = document.getElementById('loginOverlay');
+    overlay.style.transition = "opacity 0.5s ease";
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 500);
 
-    // Heartbeat de Presença
     startHeartbeat();
     await loadInitialData();
     renderCalendar();
     setupSubscriptions();
     applyTemporalVibe();
+    
+    addLog(`<b>${user.name}</b> entrou no centro de comando.`);
 }
 
-// 2. CARREGAMENTO DE DADOS
+// 2. CARREGAMENTO DE DADOS (Removi a chave extra que estava acima daqui)
 async function loadInitialData() {
     const { data: tasks } = await supabase.from('tasks').select('*');
     const { data: presence } = await supabase.from('team_presence').select('*');

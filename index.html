@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -9,273 +9,92 @@
 
 <style>
   :root {
-    --bg: #0a0a0a;
-    --bg2: #111111;
-    --bg3: #1a1a1a;
-    --red: #e63022;
-    --orange: #ff6b1a;
-    --white: #f0ece4;
-    --gray: #888;
-    --gray2: #444;
-    --done: #2d6a2d;
-    --done-text: #5cdb5c;
-    --border: #2a2a2a;
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
+    --red: #e63022; --orange: #ff6b1a; --white: #f0ece4;
+    --gray: #888; --gray2: #444; --done: #2d6a2d;
+    --done-text: #5cdb5c; --border: #2a2a2a;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  body { background: var(--bg); color: var(--white); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
 
   /* HEADER */
-  .header {
-    padding: 40px 40px 20px;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-  .header::before {
-    content: '';
-    position: absolute;
-    top: -80px; right: -80px;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(230,48,34,0.15) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  .brand-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(36px, 6vw, 72px);
-    letter-spacing: 4px;
-    line-height: 1;
-    color: var(--white);
-  }
+  .header { padding: 40px 40px 20px; border-bottom: 1px solid var(--border); position: relative; }
+  .brand-title { font-family: 'Bebas Neue'; font-size: clamp(36px, 6vw, 72px); letter-spacing: 4px; line-height: 1; }
   .brand-title span { color: var(--red); }
-  .subtitle {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 300;
-    letter-spacing: 6px;
-    color: var(--gray);
-    text-transform: uppercase;
-    margin-top: 6px;
-  }
-  .progress-block {
-    text-align: right;
-  }
-  .progress-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--gray);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-  .progress-bar-wrap {
-    width: 220px;
-    height: 6px;
-    background: var(--bg3);
-    border-radius: 0;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--red), var(--orange));
-    transition: width 0.5s ease;
-    width: 0%;
-  }
-  .progress-count {
-    font-size: 28px;
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 2px;
-    color: var(--white);
-    margin-top: 6px;
-  }
-  .progress-count span { color: var(--red); }
+  .progress-bar-wrap { width: 220px; height: 6px; background: var(--bg3); border: 1px solid var(--border); }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); transition: 0.5s; width: 0%; }
 
-  /* FASES */
-  .phase-legend {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    padding: 16px 40px;
-    border-bottom: 1px solid var(--border);
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--gray);
-  }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  /* MAIN E SIDEBAR */
+  .main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 200px); }
+  .sidebar { border-right: 1px solid var(--border); padding: 30px 24px; position: sticky; top: 0; height: calc(100vh - 100px); overflow-y: auto; }
 
-  /* MAIN */
-  .main {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    min-height: calc(100vh - 200px);
+  /* ESTILO APPLE GLASS (O QUE VOCÊ PEDIU) */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 25px;
+    transition: 0.3s;
   }
+  .glass-panel:hover { transform: translateY(-5px); border: 1px solid rgba(230, 48, 34, 0.4); }
 
-  /* SIDEBAR */
-  .sidebar {
-    border-right: 1px solid var(--border);
-    padding: 30px 24px;
-    position: sticky;
-    top: 0;
-    height: calc(100vh - 200px);
-    overflow-y: auto;
-  }
-  .sidebar-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 3px;
-    color: var(--red);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .selected-day-date {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px;
-    letter-spacing: 2px;
-    line-height: 1;
-    margin-top: 2px;
-  }
-  .phase-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    background: var(--red);
-    color: var(--white);
-    margin-top: 6px;
-  }
+  .activity-item { border-left: 2px solid var(--red); padding-left: 10px; margin-bottom: 15px; font-size: 11px; }
 
-  .time-slot {
-    display: flex;
-    gap: 14px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .time-label {
-    font-size: 11px;
-    color: var(--red);
-    min-width: 90px;
-    font-weight: 700;
-  }
-  .task-text { font-family: 'Barlow Condensed'; font-size: 15px; font-weight: 600; }
-  .task-sub { font-family: 'Barlow Condensed'; font-size: 12px; color: var(--gray); }
-
-  /* NOTAS */
-  .notes-box {
-    margin-top: 20px;
-    border-top: 1px solid var(--border);
-    padding-top: 20px;
-  }
-  .notes-input {
-    width: 100%;
-    height: 100px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--white);
-    font-family: 'Space Mono';
-    padding: 10px;
-    font-size: 12px;
-    resize: none;
-    margin-top: 10px;
-  }
-
-  /* CALENDAR */
+  /* CALENDÁRIO */
   .calendar-area { padding: 30px; }
-  .month-section { margin-bottom: 40px; }
-  .month-label { font-family: 'Bebas Neue'; font-size: 32px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 16px; }
   .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .day-cell {
-    aspect-ratio: 1;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: 0.2s;
-  }
-  .day-cell:hover { border-color: var(--red); }
+  .day-cell { aspect-ratio: 1; background: var(--bg2); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; }
   .day-cell.selected { border-color: var(--orange); background: rgba(255,107,26,0.1); }
   .day-cell.done { background: rgba(45,106,45,0.2); border-color: var(--done-text); }
-  .day-cell.done .day-num { color: var(--done-text); }
   .day-num { font-family: 'Bebas Neue'; font-size: 22px; }
-  .day-phase-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
-  .check-icon { font-size: 16px; color: var(--done-text); position: absolute; top: 4px; right: 6px; }
 
-  .mark-btn {
-    display: block; width: 100%; padding: 14px; background: var(--red); color: white; border: none;
-    font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; margin-top: 15px;
-  }
+  .mark-btn { display: block; width: 100%; padding: 14px; background: var(--red); color: white; border: none; font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; margin-top: 15px; }
   .mark-btn.is-done { background: var(--done); color: var(--done-text); }
+  .notes-input { width: 100%; height: 100px; background: #000; border: 1px solid var(--border); color: white; padding: 10px; font-family: inherit; font-size: 12px; margin-top: 10px; resize: none; }
 
-  @media (max-width: 768px) { .main { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } }
+  @media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-top">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
     <div>
       <div class="brand-title">ROAD TO<span> LAUNCH</span></div>
-      <div class="subtitle">Workflow Colaborativo — Equipe 2026</div>
+      <div style="font-size:12px; color:var(--gray); letter-spacing:4px; text-transform:uppercase;">Intrusive Workflow</div>
     </div>
-    <div class="progress-block">
-      <div class="progress-label">Progresso geral</div>
+    <div style="text-align:right;">
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
-      <div class="progress-count"><span id="doneCount">0</span> / <span id="totalCount">0</span> dias</div>
+      <div style="font-family:'Bebas Neue'; margin-top:6px;"><span id="doneCount">0</span> / <span id="totalCount">0</span> DIAS</div>
     </div>
   </div>
 </div>
 
-<div class="phase-legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#e63022"></div> Fase 1</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff6b1a"></div> Fase 2</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f5c518"></div> Fase 3</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1a9fff"></div> Fase 4</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#5cdb5c"></div> Fase 5</div>
-</div>
-
 <div class="main">
   <div class="sidebar">
-    <div class="sidebar-title">ROTINA DIÁRIA</div>
-    <div id="selDayDate" class="selected-day-date">--/--</div>
-    <div id="selPhaseBadge" class="phase-badge">---</div>
+    <div style="font-family:'Bebas Neue'; color:var(--red); border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">ROTINA DIÁRIA</div>
+    <div id="selDayDate" style="font-family:'Bebas Neue'; font-size:36px;">--/--</div>
     
-    <div id="scheduleBlock" style="margin-top: 20px;"></div>
+    <div id="scheduleBlock" style="margin-top:20px;"></div>
 
-    <div class="notes-box">
-      <div class="progress-label">Notas da Equipe</div>
-      <textarea id="dayNotes" class="notes-input" placeholder="Escreva aqui..."></textarea>
-      <button class="mark-btn" style="background: var(--gray2); font-size: 14px; padding: 8px;" onclick="saveData()">SALVAR NOTA</button>
+    <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:15px;">
+      <div style="font-size:10px; color:var(--gray); letter-spacing:2px;">OBSERVAÇÕES</div>
+      <textarea id="dayNotes" class="notes-input" placeholder="O que aconteceu hoje?"></textarea>
+      <button class="mark-btn" onclick="saveData()" style="font-size:12px; background:var(--gray2); padding:8px;">SALVAR NOTA</button>
     </div>
 
     <button class="mark-btn" id="markBtn" onclick="toggleStatus()" style="display:none">MARCAR CONCLUÍDO</button>
+
+    <div class="glass-panel">
+      <div style="font-size:10px; color:var(--white); margin-bottom:15px; font-weight:bold;">ATIVIDADE RECENTE</div>
+      <div id="recentActivity">
+        <div style="font-size:11px; color:var(--gray);">Nenhuma nota recente.</div>
+      </div>
+    </div>
   </div>
 
   <div class="calendar-area" id="calendarArea"></div>
@@ -283,36 +102,22 @@
 
 <script>
 // --- CONFIGURAÇÃO DO SUPABASE ---
+// COLOQUE SEUS DADOS AQUI EMBAIXO:
 const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co'; 
-const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
+const SB_KEY = ' sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const PHASES = {
-  1: { name: 'FUNDAÇÃO', color: '#e63022', start: '2026-05-12', end: '2026-05-25' },
-  2: { name: 'IDENTIDADE', color: '#ff6b1a', start: '2026-05-26', end: '2026-06-08' },
-  3: { name: 'PRODUÇÃO', color: '#f5c518', start: '2026-06-09', end: '2026-06-22' },
-  4: { name: 'PRÉ-LANÇAMENTO', color: '#1a9fff', start: '2026-06-23', end: '2026-07-07' },
-  5: { name: 'LANÇAMENTO', color: '#5cdb5c', start: '2026-07-08', end: '2026-07-12' },
-};
-
-const SCHEDULES = {
-  1: [
-    { time: '08:00–09:00', task: 'Organizar ambiente de trabalho', sub: 'Montar pastas no PC' },
-    { time: '09:00–11:00', task: 'Illustrator — tutoriais', sub: 'Focar em flat sketches' }
-  ],
-  2: [{ time: '09:00–12:00', task: 'Illustrator — flats', sub: 'Criar o flat técnico' }],
-  3: [{ time: '09:00–12:00', task: 'Finalizar designs', sub: 'Photoshop avançado' }],
-  4: [{ time: '09:30–12:00', task: 'Criar marketing', sub: 'Posts e Stories' }],
-  5: [{ time: '08:00–10:00', task: '🚀 LANÇAMENTO', sub: 'Publicar canais' }]
-};
-
+const START_DATE = '2026-05-12';
+const END_DATE = '2026-07-12';
 let selectedDate = '2026-05-12';
 let dbData = {};
 
+// Função INIT: O comando que liga tudo
 async function init() {
-  await fetchAll();
-  renderCalendar();
-  selectDay(selectedDate);
+  await fetchAll();       // 1. Busca os dados no banco
+  renderCalendar();     // 2. Desenha os quadradinhos do calendário
+  selectDay(selectedDate); // 3. Mostra o dia inicial
+  updateActivityPanel(); // 4. Atualiza o painel de vidro
 }
 
 async function fetchAll() {
@@ -324,108 +129,85 @@ async function fetchAll() {
 function renderCalendar() {
   const area = document.getElementById('calendarArea');
   area.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'days-grid';
   
-  const months = [
-    { m: 4, name: 'MAIO' }, { m: 5, name: 'JUNHO' }, { m: 6, name: 'JULHO' }
-  ];
+  let curr = new Date(START_DATE + 'T00:00:00');
+  const end = new Date(END_DATE + 'T00:00:00');
+  let total = 0; let done = 0;
 
-  let totalInRange = 0;
-  let totalDone = 0;
+  while(curr <= end) {
+    const ds = curr.toISOString().split('T')[0];
+    const isDone = dbData[ds]?.is_done || false;
+    if(ds >= START_DATE && ds <= END_DATE) total++;
+    if(isDone) done++;
 
-  months.forEach(mInfo => {
-    const section = document.createElement('div');
-    section.className = 'month-section';
-    section.innerHTML = `<div class="month-label">${mInfo.name} <span>2026</span></div>`;
-    
-    const grid = document.createElement('div');
-    grid.className = 'days-grid';
-    
-    const daysInMonth = new Date(2026, mInfo.m + 1, 0).getDate();
-    
-    for(let d=1; d<=daysInMonth; d++) {
-      const ds = `2026-${String(mInfo.m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const inRange = ds >= '2026-05-12' && ds <= '2026-07-12';
-      const isDone = dbData[ds]?.is_done || false;
-      const phase = Object.keys(PHASES).find(p => ds >= PHASES[p].start && ds <= PHASES[p].end);
-      
-      if(inRange) totalInRange++;
-      if(isDone && inRange) totalDone++;
-
-      const cell = document.createElement('div');
-      cell.className = `day-cell ${!inRange ? 'inactive' : ''} ${isDone ? 'done' : ''} ${selectedDate === ds ? 'selected' : ''}`;
-      if(inRange) {
-        cell.onclick = () => selectDay(ds);
-        cell.innerHTML = `
-          ${isDone ? '<div class="check-icon">✓</div>' : ''}
-          <div class="day-num">${d}</div>
-          <div class="day-phase-dot" style="background:${PHASES[phase]?.color || '#444'}"></div>
-        `;
-      }
-      grid.appendChild(cell);
-    }
-    section.appendChild(grid);
-    area.appendChild(section);
-  });
-
-  document.getElementById('totalCount').textContent = totalInRange;
-  document.getElementById('doneCount').textContent = totalDone;
-  document.getElementById('progressFill').style.width = (totalDone/totalInRange*100) + '%';
+    const cell = document.createElement('div');
+    cell.className = `day-cell ${isDone ? 'done' : ''} ${selectedDate === ds ? 'selected' : ''}`;
+    cell.innerHTML = `<div class="day-num">${curr.getDate()}</div>`;
+    cell.onclick = () => selectDay(ds);
+    grid.appendChild(cell);
+    curr.setDate(curr.getDate() + 1);
+  }
+  area.appendChild(grid);
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('progressFill').style.width = (done/total*100) + '%';
 }
 
 function selectDay(ds) {
   selectedDate = ds;
   const data = dbData[ds] || { note_text: '', is_done: false };
-  const phaseNum = Object.keys(PHASES).find(p => ds >= PHASES[p].start && ds <= PHASES[p].end);
-  
   document.getElementById('selDayDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
   document.getElementById('dayNotes').value = data.note_text || '';
   
-  const badge = document.getElementById('selPhaseBadge');
-  if(phaseNum) {
-    badge.textContent = `FASE ${phaseNum} — ${PHASES[phaseNum].name}`;
-    badge.style.background = PHASES[phaseNum].color;
-    badge.style.display = 'inline-block';
-  }
-
-  const sched = SCHEDULES[phaseNum] || [];
-  document.getElementById('scheduleBlock').innerHTML = sched.map(s => `
-    <div class="time-slot ${data.is_done ? 'done-overlay' : ''}">
-      <div class="time-label">${s.time}</div>
-      <div><div class="task-text">${s.task}</div><div class="task-sub">${s.sub}</div></div>
-    </div>
-  `).join('');
-
   const btn = document.getElementById('markBtn');
   btn.style.display = 'block';
   btn.textContent = data.is_done ? '✓ DESMARCAR DIA' : 'MARCAR COMO CONCLUÍDO';
   btn.className = data.is_done ? 'mark-btn is-done' : 'mark-btn';
 
-  // Atualiza borda de seleção visualmente
   document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
+}
+
+function updateActivityPanel() {
+  const activityDiv = document.getElementById('recentActivity');
+  const items = Object.values(dbData)
+    .filter(d => d.note_text)
+    .sort((a, b) => b.date_id.localeCompare(a.date_id))
+    .slice(0, 3);
+
+  if (items.length > 0) {
+    activityDiv.innerHTML = items.map(i => `
+      <div class="activity-item">
+        <div style="color:var(--white); font-weight:bold;">DIA ${i.date_id.split('-').reverse().join('/')}</div>
+        <div style="font-style:italic; color:var(--gray);">"${i.note_text.substring(0, 30)}..."</div>
+      </div>
+    `).join('');
+  }
 }
 
 async function saveData() {
   const note = document.getElementById('dayNotes').value;
   const isDone = dbData[selectedDate]?.is_done || false;
   await supabaseClient.from('calendar_data').upsert({ date_id: selectedDate, note_text: note, is_done: isDone });
-  alert("Salvo!");
   await fetchAll();
   renderCalendar();
+  updateActivityPanel();
+  alert("Nota Salva!");
 }
 
 async function toggleStatus() {
   const current = dbData[selectedDate]?.is_done || false;
   await supabaseClient.from('calendar_data').upsert({ 
-    date_id: selectedDate, 
-    is_done: !current,
-    note_text: document.getElementById('dayNotes').value
+    date_id: selectedDate, is_done: !current, note_text: document.getElementById('dayNotes').value
   });
   await fetchAll();
   renderCalendar();
   selectDay(selectedDate);
+  updateActivityPanel();
 }
 
 init();
 </script>
 </body>
-</html>7
+</html>

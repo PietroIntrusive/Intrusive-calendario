@@ -55,7 +55,40 @@
 
   .mark-btn { display: block; width: 100%; padding: 14px; background: var(--red); color: white; border: none; font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; margin-top: 15px; }
   .mark-btn.is-done { background: var(--done); color: var(--done-text); }
-  .notes-input { width: 100%; height: 100px; background: #000; border: 1px solid var(--border); color: white; padding: 10px; margin-top: 10px; resize: none; font-family: inherit; }
+/* Efeito de Janela Modal estilo Apple */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); /* Fundo escuro */
+    backdrop-filter: blur(10px); /* Desfoque sexy */
+    -webkit-backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 30px; /* Bordas bem arredondadas Apple */
+    padding: 40px;
+    width: 90%; max-width: 450px;
+    position: relative;
+    transform: scale(0.7); /* Começa menor para o efeito de zoom */
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.modal-overlay.active { display: flex; opacity: 1; }
+.modal-overlay.active .modal-content { transform: scale(1); } /* Zoom para o tamanho normal */
+
+.close-modal {
+    position: absolute; top: 20px; right: 25px;
+    font-size: 28px; cursor: pointer; color: var(--gray);
+    line-height: 1;
+}
 </style>
 </head>
 <body>
@@ -181,19 +214,37 @@ function renderCalendar() {
 }
 
 function selectDay(ds) {
-  selectedDate = ds;
-  const data = dbData[ds] || { note_text: '', is_done: false };
-  document.getElementById('selDayDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
-  document.getElementById('dayNotes').value = data.note_text || '';
-  
-  const phase = getPhase(ds);
-  document.getElementById('selPhaseBadge').textContent = phase ? `FASE ${phase}` : '';
+    selectedDate = ds;
+    const data = dbData[ds] || { note_text: '', is_done: false };
+    const phase = getPhase(ds);
+    
+    // 1. Preenche os dados na Janela (Modal)
+    document.getElementById('modalDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
+    document.getElementById('modalPhase').textContent = phase ? `FASE ${phase}` : '';
+    document.getElementById('modalNotesDisplay').textContent = data.note_text || "Nenhuma nota registrada para este dia.";
+    
+    // 2. Ajusta o botão da Modal
+    const btn = document.getElementById('modalBtn');
+    btn.textContent = data.is_done ? '✓ DIA CONCLUÍDO' : 'CONCLUIR DIA';
+    btn.className = data.is_done ? 'mark-btn is-done' : 'mark-btn';
 
-  const btn = document.getElementById('markBtn');
-  btn.textContent = data.is_done ? '✓ DESMARCAR DIA' : 'MARCAR CONCLUÍDO';
-  btn.className = data.is_done ? 'mark-btn is-done' : 'mark-btn';
-  
-  document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
+    // 3. Abre a animação sexy
+    const modal = document.getElementById('dayModal');
+    modal.classList.add('active');
+    
+    // Mantém a sidebar atualizada também
+    document.getElementById('selDayDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
+}
+
+// Função para fechar a janela
+function closeDayModal() {
+    document.getElementById('dayModal').classList.remove('active');
+}
+
+// Função para marcar como concluído de dentro da janela
+async function toggleStatusFromModal() {
+    await toggleStatus(); 
+    closeDayModal();
 }
 
 async function saveData() {
@@ -235,6 +286,19 @@ function updateActivityPanel() {
 }
 
 init();
-</script>
+</script><div id="dayModal" class="modal-overlay" onclick="closeDayModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeDayModal()">&times;</span>
+        <div id="modalDate" style="font-family:'Bebas Neue'; font-size: 52px; color: var(--red); line-height:1;">--/--</div>
+        <div id="modalPhase" style="font-size: 11px; color: var(--gray); letter-spacing: 3px; margin-bottom: 25px; text-transform: uppercase;"></div>
+        
+        <div style="background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 10px; color: var(--red); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">NOTAS DA EQUIPE:</div>
+            <div id="modalNotesDisplay" style="font-family: 'Barlow Condensed'; font-size: 18px; color: var(--white); line-height: 1.4;"></div>
+        </div>
+
+        <button class="mark-btn" id="modalBtn" onclick="toggleStatusFromModal()" style="margin-top: 25px; border-radius: 12px;">MARCAR CONCLUÍDO</button>
+    </div>
+</div>
 </body>
 </html>

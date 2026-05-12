@@ -6,7 +6,6 @@
 <title>CALENDÁRIO — LANÇAMENTO DA MARCA</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
   :root {
     --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
@@ -14,59 +13,56 @@
     --gray: #888; --gray2: #444; --done: #2d6a2d;
     --done-text: #5cdb5c; --border: #2a2a2a;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--white); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
 
-  /* HEADER */
+  /* HEADER ORIGINAL */
   .header { padding: 40px 40px 20px; border-bottom: 1px solid var(--border); position: relative; }
   .brand-title { font-family: 'Bebas Neue'; font-size: clamp(36px, 6vw, 72px); letter-spacing: 4px; line-height: 1; }
   .brand-title span { color: var(--red); }
   .progress-bar-wrap { width: 220px; height: 6px; background: var(--bg3); border: 1px solid var(--border); }
   .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); transition: 0.5s; width: 0%; }
 
+  /* LEGENDA ORIGINAL */
+  .phase-legend { display: flex; gap: 20px; flex-wrap: wrap; padding: 16px 30px; border-bottom: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'Barlow Condensed'; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gray); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
   /* MAIN E SIDEBAR */
   .main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 200px); }
   .sidebar { border-right: 1px solid var(--border); padding: 30px 24px; position: sticky; top: 0; height: calc(100vh - 100px); overflow-y: auto; }
 
-  /* ESTILO APPLE GLASS (O QUE VOCÊ PEDIU) */
+  /* NOVO: PAINEL APPLE GLASS */
   .glass-panel {
     background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 25px;
-    transition: 0.3s;
+    border-radius: 16px; padding: 20px; margin-top: 25px; transition: 0.3s;
   }
-  .glass-panel:hover { transform: translateY(-5px); border: 1px solid rgba(230, 48, 34, 0.4); }
+  .glass-panel:hover { border-color: rgba(230, 48, 34, 0.4); transform: translateY(-3px); }
 
-  .activity-item { border-left: 2px solid var(--red); padding-left: 10px; margin-bottom: 15px; font-size: 11px; }
-
-  /* CALENDÁRIO */
+  /* CALENDÁRIO COM MESES SEPARADOS (ORIGINAL) */
   .calendar-area { padding: 30px; }
+  .month-section { margin-bottom: 40px; }
+  .month-label { font-family: 'Bebas Neue'; font-size: 32px; letter-spacing: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .month-label span { color: var(--red); }
   .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .day-cell { aspect-ratio: 1; background: var(--bg2); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; }
+  .day-cell { aspect-ratio: 1; background: var(--bg2); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: 0.2s; }
   .day-cell.selected { border-color: var(--orange); background: rgba(255,107,26,0.1); }
   .day-cell.done { background: rgba(45,106,45,0.2); border-color: var(--done-text); }
   .day-num { font-family: 'Bebas Neue'; font-size: 22px; }
+  .day-phase-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
 
   .mark-btn { display: block; width: 100%; padding: 14px; background: var(--red); color: white; border: none; font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; margin-top: 15px; }
   .mark-btn.is-done { background: var(--done); color: var(--done-text); }
-  .notes-input { width: 100%; height: 100px; background: #000; border: 1px solid var(--border); color: white; padding: 10px; font-family: inherit; font-size: 12px; margin-top: 10px; resize: none; }
-
-  @media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
+  .notes-input { width: 100%; height: 100px; background: #000; border: 1px solid var(--border); color: white; padding: 10px; margin-top: 10px; resize: none; font-family: inherit; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-    <div>
-      <div class="brand-title">ROAD TO<span> LAUNCH</span></div>
-      <div style="font-size:12px; color:var(--gray); letter-spacing:4px; text-transform:uppercase;">Intrusive Workflow</div>
-    </div>
+    <div><div class="brand-title">ROAD TO<span> LAUNCH</span></div></div>
     <div style="text-align:right;">
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
       <div style="font-family:'Bebas Neue'; margin-top:6px;"><span id="doneCount">0</span> / <span id="totalCount">0</span> DIAS</div>
@@ -74,26 +70,26 @@
   </div>
 </div>
 
+<div class="phase-legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#e63022"></div> Fase 1</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6b1a"></div> Fase 2</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f5c518"></div> Fase 3</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1a9fff"></div> Fase 4</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5cdb5c"></div> Fase 5</div>
+</div>
+
 <div class="main">
   <div class="sidebar">
-    <div style="font-family:'Bebas Neue'; color:var(--red); border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">ROTINA DIÁRIA</div>
-    <div id="selDayDate" style="font-family:'Bebas Neue'; font-size:36px;">--/--</div>
+    <div id="selDayDate" style="font-family:'Bebas Neue'; font-size:48px; line-height:1;">--/--</div>
+    <div id="selPhaseBadge" style="font-size:10px; color:var(--red); margin-top:5px; font-weight:bold;"></div>
     
-    <div id="scheduleBlock" style="margin-top:20px;"></div>
-
-    <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:15px;">
-      <div style="font-size:10px; color:var(--gray); letter-spacing:2px;">OBSERVAÇÕES</div>
-      <textarea id="dayNotes" class="notes-input" placeholder="O que aconteceu hoje?"></textarea>
-      <button class="mark-btn" onclick="saveData()" style="font-size:12px; background:var(--gray2); padding:8px;">SALVAR NOTA</button>
-    </div>
-
-    <button class="mark-btn" id="markBtn" onclick="toggleStatus()" style="display:none">MARCAR CONCLUÍDO</button>
+    <textarea id="dayNotes" class="notes-input" placeholder="Notas da equipe..."></textarea>
+    <button class="mark-btn" style="font-size:12px; background:var(--gray2);" onclick="saveData()">SALVAR NOTA</button>
+    <button class="mark-btn" id="markBtn" onclick="toggleStatus()">MARCAR CONCLUÍDO</button>
 
     <div class="glass-panel">
-      <div style="font-size:10px; color:var(--white); margin-bottom:15px; font-weight:bold;">ATIVIDADE RECENTE</div>
-      <div id="recentActivity">
-        <div style="font-size:11px; color:var(--gray);">Nenhuma nota recente.</div>
-      </div>
+      <div style="font-size:10px; color:var(--white); margin-bottom:12px; font-weight:bold; letter-spacing:1px;">ATIVIDADE RECENTE</div>
+      <div id="recentActivity" style="font-size:11px; color:var(--gray);">Aguardando...</div>
     </div>
   </div>
 
@@ -101,23 +97,33 @@
 </div>
 
 <script>
-// --- CONFIGURAÇÃO DO SUPABASE ---
-// COLOQUE SEUS DADOS AQUI EMBAIXO:
+// --- CHAVES DO SUPABASE (COLOQUE AS SUAS AQUI) ---
 const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co'; 
 const SB_KEY = ' sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const START_DATE = '2026-05-12';
-const END_DATE = '2026-07-12';
+const PHASES = {
+  1: { start: '2026-05-12', end: '2026-05-25', color: '#e63022' },
+  2: { start: '2026-05-26', end: '2026-06-08', color: '#ff6b1a' },
+  3: { start: '2026-06-09', end: '2026-06-22', color: '#f5c518' },
+  4: { start: '2026-06-23', end: '2026-07-07', color: '#1a9fff' },
+  5: { start: '2026-07-08', end: '2026-07-12', color: '#5cdb5c' }
+};
+
+const MONTHS = [
+  { name: 'MAI', month: 4, year: 2026 },
+  { name: 'JUN', month: 5, year: 2026 },
+  { name: 'JUL', month: 6, year: 2026 }
+];
+
 let selectedDate = '2026-05-12';
 let dbData = {};
 
-// Função INIT: O comando que liga tudo
 async function init() {
-  await fetchAll();       // 1. Busca os dados no banco
-  renderCalendar();     // 2. Desenha os quadradinhos do calendário
-  selectDay(selectedDate); // 3. Mostra o dia inicial
-  updateActivityPanel(); // 4. Atualiza o painel de vidro
+  await fetchAll();
+  renderCalendar();
+  selectDay(selectedDate);
+  updateActivityPanel();
 }
 
 async function fetchAll() {
@@ -126,30 +132,49 @@ async function fetchAll() {
   data?.forEach(d => dbData[d.date_id] = d);
 }
 
+function getPhase(ds) {
+  for (let p in PHASES) {
+    if (ds >= PHASES[p].start && ds <= PHASES[p].end) return p;
+  }
+  return null;
+}
+
 function renderCalendar() {
   const area = document.getElementById('calendarArea');
   area.innerHTML = '';
-  const grid = document.createElement('div');
-  grid.className = 'days-grid';
-  
-  let curr = new Date(START_DATE + 'T00:00:00');
-  const end = new Date(END_DATE + 'T00:00:00');
   let total = 0; let done = 0;
 
-  while(curr <= end) {
-    const ds = curr.toISOString().split('T')[0];
-    const isDone = dbData[ds]?.is_done || false;
-    if(ds >= START_DATE && ds <= END_DATE) total++;
-    if(isDone) done++;
+  MONTHS.forEach(m => {
+    const section = document.createElement('div');
+    section.className = 'month-section';
+    section.innerHTML = `<div class="month-label">${m.name} <span>2026</span></div>`;
+    
+    const grid = document.createElement('div');
+    grid.className = 'days-grid';
+    
+    const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = `${m.year}-${String(m.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const phase = getPhase(ds);
+      if (!phase) continue;
 
-    const cell = document.createElement('div');
-    cell.className = `day-cell ${isDone ? 'done' : ''} ${selectedDate === ds ? 'selected' : ''}`;
-    cell.innerHTML = `<div class="day-num">${curr.getDate()}</div>`;
-    cell.onclick = () => selectDay(ds);
-    grid.appendChild(cell);
-    curr.setDate(curr.getDate() + 1);
-  }
-  area.appendChild(grid);
+      total++;
+      const isDone = dbData[ds]?.is_done || false;
+      if (isDone) done++;
+
+      const cell = document.createElement('div');
+      cell.className = `day-cell ${isDone ? 'done' : ''} ${selectedDate === ds ? 'selected' : ''}`;
+      cell.innerHTML = `
+        <div class="day-num">${d}</div>
+        <div class="day-phase-dot" style="background:${PHASES[phase].color}"></div>
+      `;
+      cell.onclick = () => selectDay(ds);
+      grid.appendChild(cell);
+    }
+    section.appendChild(grid);
+    area.appendChild(section);
+  });
+
   document.getElementById('totalCount').textContent = total;
   document.getElementById('doneCount').textContent = done;
   document.getElementById('progressFill').style.width = (done/total*100) + '%';
@@ -161,29 +186,14 @@ function selectDay(ds) {
   document.getElementById('selDayDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
   document.getElementById('dayNotes').value = data.note_text || '';
   
+  const phase = getPhase(ds);
+  document.getElementById('selPhaseBadge').textContent = phase ? `FASE ${phase}` : '';
+
   const btn = document.getElementById('markBtn');
-  btn.style.display = 'block';
-  btn.textContent = data.is_done ? '✓ DESMARCAR DIA' : 'MARCAR COMO CONCLUÍDO';
+  btn.textContent = data.is_done ? '✓ DESMARCAR DIA' : 'MARCAR CONCLUÍDO';
   btn.className = data.is_done ? 'mark-btn is-done' : 'mark-btn';
-
+  
   document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
-}
-
-function updateActivityPanel() {
-  const activityDiv = document.getElementById('recentActivity');
-  const items = Object.values(dbData)
-    .filter(d => d.note_text)
-    .sort((a, b) => b.date_id.localeCompare(a.date_id))
-    .slice(0, 3);
-
-  if (items.length > 0) {
-    activityDiv.innerHTML = items.map(i => `
-      <div class="activity-item">
-        <div style="color:var(--white); font-weight:bold;">DIA ${i.date_id.split('-').reverse().join('/')}</div>
-        <div style="font-style:italic; color:var(--gray);">"${i.note_text.substring(0, 30)}..."</div>
-      </div>
-    `).join('');
-  }
 }
 
 async function saveData() {
@@ -193,7 +203,7 @@ async function saveData() {
   await fetchAll();
   renderCalendar();
   updateActivityPanel();
-  alert("Nota Salva!");
+  alert("Nota salva!");
 }
 
 async function toggleStatus() {
@@ -205,6 +215,23 @@ async function toggleStatus() {
   renderCalendar();
   selectDay(selectedDate);
   updateActivityPanel();
+}
+
+function updateActivityPanel() {
+  const activityDiv = document.getElementById('recentActivity');
+  const items = Object.values(dbData)
+    .filter(d => d.note_text)
+    .sort((a, b) => b.date_id.localeCompare(a.date_id))
+    .slice(0, 2);
+
+  if (items.length > 0) {
+    activityDiv.innerHTML = items.map(i => `
+      <div style="border-left:2px solid var(--red); padding-left:8px; margin-bottom:10px;">
+        <div style="color:white; font-weight:bold;">DIA ${i.date_id.split('-').reverse().join('/')}</div>
+        <div style="color:var(--gray); font-style:italic;">"${i.note_text.substring(0,25)}..."</div>
+      </div>
+    `).join('');
+  }
 }
 
 init();

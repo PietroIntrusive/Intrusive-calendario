@@ -1,304 +1,403 @@
  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CALENDÁRIO — LANÇAMENTO DA MARCA</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
-    --red: #e63022; --orange: #ff6b1a; --white: #f0ece4;
-    --gray: #888; --gray2: #444; --done: #2d6a2d;
-    --done-text: #5cdb5c; --border: #2a2a2a;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--bg); color: var(--white); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTRUSIVE — COMMAND CENTER</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  /* HEADER ORIGINAL */
-  .header { padding: 40px 40px 20px; border-bottom: 1px solid var(--border); position: relative; }
-  .brand-title { font-family: 'Bebas Neue'; font-size: clamp(36px, 6vw, 72px); letter-spacing: 4px; line-height: 1; }
-  .brand-title span { color: var(--red); }
-  .progress-bar-wrap { width: 220px; height: 6px; background: var(--bg3); border: 1px solid var(--border); }
-  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); transition: 0.5s; width: 0%; }
+    <style>
+        :root {
+            /* Palette Original Turbinada */
+            --bg-deep: #050505;
+            --bg-morning: linear-gradient(135deg, #121212 0%, #050505 100%);
+            --bg-night: linear-gradient(135deg, #050505 0%, #000000 100%);
+            --red: #e63022;
+            --orange: #ff6b1a;
+            --white: #f0ece4;
+            --gray: #666;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --apple-blur: blur(35px);
+            --neon-shadow: 0 0 15px rgba(230, 48, 34, 0.4);
+        }
 
-  /* LEGENDA ORIGINAL */
-  .phase-legend { display: flex; gap: 20px; flex-wrap: wrap; padding: 16px 30px; border-bottom: 1px solid var(--border); }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'Barlow Condensed'; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gray); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
 
-  /* MAIN E SIDEBAR */
-  .main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 200px); }
-  .sidebar { border-right: 1px solid var(--border); padding: 30px 24px; position: sticky; top: 0; height: calc(100vh - 100px); overflow-y: auto; }
+        body {
+            background: var(--bg-deep);
+            color: var(--white);
+            font-family: 'Barlow Condensed', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 3s ease;
+        }
 
-  /* NOVO: PAINEL APPLE GLASS */
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px; padding: 20px; margin-top: 25px; transition: 0.3s;
-  }
-  .glass-panel:hover { border-color: rgba(230, 48, 34, 0.4); transform: translateY(-3px); }
+        /* EFEITOS DE ESTÉTICA */
+        .glitch-urgency {
+            animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
 
-  /* CALENDÁRIO COM MESES SEPARADOS (ORIGINAL) */
-  .calendar-area { padding: 30px; }
-  .month-section { margin-bottom: 40px; }
-  .month-label { font-family: 'Bebas Neue'; font-size: 32px; letter-spacing: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-  .month-label span { color: var(--red); }
-  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .day-cell { aspect-ratio: 1; background: var(--bg2); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: 0.2s; }
-  .day-cell.selected { border-color: var(--orange); background: rgba(255,107,26,0.1); }
-  .day-cell.done { background: rgba(45,106,45,0.2); border-color: var(--done-text); }
-  .day-num { font-family: 'Bebas Neue'; font-size: 22px; }
-  .day-phase-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; }
+        @keyframes glitch-anim {
+            0% { text-shadow: 2px 0 var(--red), -2px 0 #00fff2; }
+            50% { text-shadow: -2px 0 var(--red), 2px 0 #00fff2; opacity: 0.8; }
+            100% { text-shadow: 1px 0 var(--red), -1px 0 #00fff2; }
+        }
 
-  .mark-btn { display: block; width: 100%; padding: 14px; background: var(--red); color: white; border: none; font-family: 'Bebas Neue'; font-size: 18px; cursor: pointer; margin-top: 15px; }
-  .mark-btn.is-done { background: var(--done); color: var(--done-text); }
-/* Efeito de Janela Modal estilo Apple */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); /* Fundo escuro */
-    backdrop-filter: blur(10px); /* Desfoque sexy */
-    -webkit-backdrop-filter: blur(10px);
-    display: none; justify-content: center; align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
+        /* LOGIN / IDENTIFICAÇÃO (OPÇÃO A) */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; backdrop-filter: blur(50px);
+        }
 
-.modal-content {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border-radius: 30px; /* Bordas bem arredondadas Apple */
-    padding: 40px;
-    width: 90%; max-width: 450px;
-    position: relative;
-    transform: scale(0.7); /* Começa menor para o efeito de zoom */
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
+        .login-card {
+            background: var(--glass); padding: 50px; border-radius: 30px;
+            border: 1px solid var(--border); text-align: center; max-width: 450px; width: 90%;
+        }
 
-.modal-overlay.active { display: flex; opacity: 1; }
-.modal-overlay.active .modal-content { transform: scale(1); } /* Zoom para o tamanho normal */
+        /* HEADER E TÍTULO DUPLO */
+        .header {
+            padding: 50px 40px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
 
-.close-modal {
-    position: absolute; top: 20px; right: 25px;
-    font-size: 28px; cursor: pointer; color: var(--gray);
-    line-height: 1;
-}
-</style>
+        .main-title-box { display: flex; align-items: baseline; gap: 15px; }
+        .road-launch { font-family: 'Bebas Neue'; font-size: 50px; letter-spacing: 5px; color: var(--white); }
+        .intrusive-brand { font-family: 'Barlow Condensed'; font-weight: 900; font-size: 85px; color: var(--red); line-height: 0.7; letter-spacing: -2px; }
+
+        /* PRESENÇA REALTIME */
+        .presence-container { display: flex; gap: -10px; }
+        .avatar-circle {
+            width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--bg-deep);
+            margin-left: -12px; background: var(--bg-deep); position: relative;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .avatar-circle:hover { transform: translateY(-5px) scale(1.1); z-index: 10; }
+        .avatar-circle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-dot { 
+            position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; 
+            background: #5cdb5c; border-radius: 50%; border: 2px solid var(--bg-deep);
+        }
+
+        /* GRID PRINCIPAL */
+        .master-layout { display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 180px); }
+
+        /* LOG DE ATIVIDADE LATERAL */
+        .activity-sidebar {
+            border-right: 1px solid var(--border); padding: 30px; overflow-y: auto;
+            background: rgba(255,255,255,0.01);
+        }
+        .log-item {
+            font-family: 'Space Mono'; font-size: 11px; padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--gray);
+            animation: fadeIn 0.5s ease;
+        }
+        .log-item b { color: var(--orange); }
+
+        /* CALENDÁRIO */
+        .calendar-container { padding: 40px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; overflow-y: auto; }
+        .day-cell {
+            aspect-ratio: 1; background: var(--bg-morning); border: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 15px; position: relative;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1); border-radius: 4px;
+        }
+        .day-cell:hover { border-color: var(--red); transform: translateY(-5px); box-shadow: var(--neon-shadow); }
+        .day-cell.active-launch { border: 1px solid var(--red); background: rgba(230, 48, 34, 0.05); }
+
+        /* EXPANSÃO FULLSCREEN */
+        .expansion-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: var(--apple-blur); -webkit-backdrop-filter: var(--apple-blur);
+            z-index: 5000; display: none; padding: 60px; justify-content: center; align-items: center;
+            opacity: 0; transition: 0.6s ease;
+        }
+        .expansion-overlay.show { display: flex; opacity: 1; }
+
+        .expansion-content {
+            width: 100%; max-width: 1200px; height: 90vh; display: grid; grid-template-columns: 1fr 1.5fr; gap: 50px;
+            transform: scale(0.9); transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .expansion-overlay.show .expansion-content { transform: scale(1); }
+
+        /* CHECKLIST DINÂMICO */
+        .task-card {
+            background: var(--glass); border-radius: 20px; padding: 25px; border: 1px solid var(--border);
+            margin-bottom: 15px; display: flex; align-items: center; gap: 20px; transition: 0.3s;
+        }
+        .task-card.completed { opacity: 0.3; transform: scale(0.98); border-color: transparent; }
+        .task-card:hover { background: rgba(255,255,255,0.06); }
+        .check-box { width: 28px; height: 28px; border: 2px solid var(--red); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .task-card.completed .check-box { background: var(--red); }
+
+        /* RANKING */
+        .rank-podium { margin-top: 30px; background: linear-gradient(to bottom, var(--glass), transparent); padding: 20px; border-radius: 20px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* BOTAO PREMIUM */
+        .btn-premium {
+            background: var(--red); color: white; border: none; padding: 12px 25px; 
+            border-radius: 12px; font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-premium:hover { transform: scale(1.05); filter: brightness(1.2); }
+    </style>
 </head>
-<body>
+<body id="dynamicBody">
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <div class="intrusive-brand" style="font-size: 60px; margin-bottom: 10px;">INTRUSIVE</div>
+        <p style="color: var(--gray); font-size: 12px; letter-spacing: 2px; margin-bottom: 40px;">IDENTIFICAÇÃO DE COMANDO</p>
+        <input type="text" id="userName" placeholder="DIGITE SEU NOME" style="width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--red); color: white; font-size: 24px; text-align: center; margin-bottom: 20px; outline: none; font-family: 'Bebas Neue';">
+        <input type="text" id="userAvatar" placeholder="LINK DA FOTO (URL)" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--gray); color: white; font-size: 14px; text-align: center; margin-bottom: 40px; outline: none;">
+        <button class="btn-premium" onclick="initCommandCenter()">INICIAR SESSÃO</button>
+    </div>
+</div>
 
 <div class="header">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-    <div><div class="brand-title">ROAD TO<span> LAUNCH</span></div></div>
-    <div style="text-align:right;">
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
-      <div style="font-family:'Bebas Neue'; margin-top:6px;"><span id="doneCount">0</span> / <span id="totalCount">0</span> DIAS</div>
+    <div class="main-title-box">
+        <div class="road-launch glitch-urgency">ROAD TO LAUNCH</div>
+        <div class="intrusive-brand">INTRUSIVE</div>
     </div>
-  </div>
-</div>
-
-<div class="phase-legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#e63022"></div> Fase 1</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff6b1a"></div> Fase 2</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f5c518"></div> Fase 3</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1a9fff"></div> Fase 4</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#5cdb5c"></div> Fase 5</div>
-</div>
-
-<div class="main">
-  <div class="sidebar">
-    <div id="selDayDate" style="font-family:'Bebas Neue'; font-size:48px; line-height:1;">--/--</div>
-    <div id="selPhaseBadge" style="font-size:10px; color:var(--red); margin-top:5px; font-weight:bold;"></div>
     
-    <textarea id="dayNotes" class="notes-input" placeholder="Notas da equipe..."></textarea>
-    <button class="mark-btn" style="font-size:12px; background:var(--gray2);" onclick="saveData()">SALVAR NOTA</button>
-    <button class="mark-btn" id="markBtn" onclick="toggleStatus()">MARCAR CONCLUÍDO</button>
+    <div class="presence-container" id="presenceBar">
+        </div>
+</div>
 
-    <div class="glass-panel">
-      <div style="font-size:10px; color:var(--white); margin-bottom:12px; font-weight:bold; letter-spacing:1px;">ATIVIDADE RECENTE</div>
-      <div id="recentActivity" style="font-size:11px; color:var(--gray);">Aguardando...</div>
+<div class="master-layout">
+    <div class="activity-sidebar">
+        <div style="font-family: 'Bebas Neue'; font-size: 20px; color: var(--red); margin-bottom: 25px; letter-spacing: 3px;">LIVE FEED</div>
+        <div id="logContainer"></div>
     </div>
-  </div>
 
-  <div class="calendar-area" id="calendarArea"></div>
+    <div class="calendar-container" id="calendarGrid"></div>
+</div>
+
+<div id="dayExpansion" class="expansion-overlay" onclick="closeDay()">
+    <div class="expansion-content" onclick="event.stopPropagation()">
+        
+        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div id="exDate" style="font-family: 'Bebas Neue'; font-size: 180px; color: var(--red); line-height: 0.8;">--/--</div>
+                <div id="exPhase" style="font-family: 'Space Mono'; letter-spacing: 15px; color: var(--gray); margin-top: 20px;">FASE 01</div>
+                
+                <div class="rank-podium">
+                    <div style="font-size: 12px; color: var(--orange); margin-bottom: 15px; font-weight: bold;">FOCO DA EQUIPE</div>
+                    <div id="exStats" style="font-family: 'Space Mono'; font-size: 14px; line-height: 2;">
+                        PIETRO: 4H 20M <br>
+                        JOÃO: 2H 15M
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-premium" style="background: var(--orange);" onclick="sendPing()">NOTIFICAR EQUIPE: "OLHA ISSO!"</button>
+        </div>
+
+        <div style="overflow-y: auto; padding-right: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div style="font-family: 'Bebas Neue'; font-size: 40px;">CHECKLIST DO DIA</div>
+                <button class="btn-premium" style="padding: 5px 15px; font-size: 12px;" onclick="createNewTask()">+ ADD TAREFA</button>
+            </div>
+            
+            <div id="taskList"></div>
+
+            <div style="margin-top: 50px;">
+                <div style="font-family: 'Bebas Neue'; font-size: 40px; margin-bottom: 20px;">NOTAS & THREADS</div>
+                <textarea id="noteInput" placeholder="Deixe uma nota ou comentário para o time..." style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 15px; padding: 20px; color: white; height: 120px; font-family: inherit; margin-bottom: 15px;"></textarea>
+                <button class="btn-premium" style="width: 100%;" onclick="saveNote()">POSTAR NA TIMELINE</button>
+                
+                <div id="commentsList" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script>
-// --- CHAVES DO SUPABASE (COLOQUE AS SUAS AQUI) ---
-const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co'; 
-const SB_KEY = ' sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
-const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+// CONFIGURAÇÕES SUPABASE
+const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
+const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
+const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-const PHASES = {
-  1: { start: '2026-05-12', end: '2026-05-25', color: '#e63022' },
-  2: { start: '2026-05-26', end: '2026-06-08', color: '#ff6b1a' },
-  3: { start: '2026-06-09', end: '2026-06-22', color: '#f5c518' },
-  4: { start: '2026-06-23', end: '2026-07-07', color: '#1a9fff' },
-  5: { start: '2026-07-08', end: '2026-07-12', color: '#5cdb5c' }
-};
+let user = { name: '', photo: '', start: Date.now() };
+let currentDay = '';
+let dataCache = { tasks: [], presence: [], notes: [] };
 
-const MONTHS = [
-  { name: 'MAI', month: 4, year: 2026 },
-  { name: 'JUN', month: 5, year: 2026 },
-  { name: 'JUL', month: 6, year: 2026 }
-];
+// 1. INICIALIZAÇÃO
+async function initCommandCenter() {
+    const name = document.getElementById('userName').value.trim();
+    if(!name) return alert("Identifique-se para entrar.");
+    
+    user.name = name;
+    user.photo = document.getElementById('userAvatar').value.trim() || `https://ui-avatars.com/api/?name=${name}&background=e63022&color=fff`;
+    
+    document.getElementById('loginOverlay').style.opacity = '0';
+    setTimeout(() => document.getElementById('loginOverlay').style.display = 'none', 500);
 
-let selectedDate = '2026-05-12';
-let dbData = {};
-
-async function init() {
-  await fetchAll();
-  renderCalendar();
-  selectDay(selectedDate);
-  updateActivityPanel();
+    // Heartbeat de Presença
+    startHeartbeat();
+    await loadInitialData();
+    renderCalendar();
+    setupSubscriptions();
+    applyTemporalVibe();
 }
 
-async function fetchAll() {
-  const { data } = await supabaseClient.from('calendar_data').select('*');
-  dbData = {};
-  data?.forEach(d => dbData[d.date_id] = d);
+// 2. CARREGAMENTO DE DADOS
+async function loadInitialData() {
+    const { data: tasks } = await supabase.from('tasks').select('*');
+    const { data: presence } = await supabase.from('team_presence').select('*');
+    const { data: interactions } = await supabase.from('interactions').select('*');
+    
+    dataCache.tasks = tasks || [];
+    dataCache.presence = presence || [];
+    dataCache.notes = interactions || [];
+    
+    updatePresenceUI();
 }
 
-function getPhase(ds) {
-  for (let p in PHASES) {
-    if (ds >= PHASES[p].start && ds <= PHASES[p].end) return p;
-  }
-  return null;
-}
-
+// 3. CALENDÁRIO
 function renderCalendar() {
-  const area = document.getElementById('calendarArea');
-  area.innerHTML = '';
-  let total = 0; let done = 0;
-
-  MONTHS.forEach(m => {
-    const section = document.createElement('div');
-    section.className = 'month-section';
-    section.innerHTML = `<div class="month-label">${m.name} <span>2026</span></div>`;
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
     
-    const grid = document.createElement('div');
-    grid.className = 'days-grid';
-    
-    const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = `${m.year}-${String(m.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const phase = getPhase(ds);
-      if (!phase) continue;
-
-      total++;
-      const isDone = dbData[ds]?.is_done || false;
-      if (isDone) done++;
-
-      const cell = document.createElement('div');
-      cell.className = `day-cell ${isDone ? 'done' : ''} ${selectedDate === ds ? 'selected' : ''}`;
-      cell.innerHTML = `
-        <div class="day-num">${d}</div>
-        <div class="day-phase-dot" style="background:${PHASES[phase].color}"></div>
-      `;
-      cell.onclick = () => selectDay(ds);
-      grid.appendChild(cell);
-    }
-    section.appendChild(grid);
-    area.appendChild(section);
-  });
-
-  document.getElementById('totalCount').textContent = total;
-  document.getElementById('doneCount').textContent = done;
-  document.getElementById('progressFill').style.width = (done/total*100) + '%';
-}
-
-function selectDay(ds) {
-    selectedDate = ds;
-    const data = dbData[ds] || { note_text: '', is_done: false };
-    const phase = getPhase(ds);
-    
-    // 1. Preenche os dados na Janela (Modal)
-    document.getElementById('modalDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
-    document.getElementById('modalPhase').textContent = phase ? `FASE ${phase}` : '';
-    document.getElementById('modalNotesDisplay').textContent = data.note_text || "Nenhuma nota registrada para este dia.";
-    
-    // 2. Ajusta o botão da Modal
-    const btn = document.getElementById('modalBtn');
-    btn.textContent = data.is_done ? '✓ DIA CONCLUÍDO' : 'CONCLUIR DIA';
-    btn.className = data.is_done ? 'mark-btn is-done' : 'mark-btn';
-
-    // 3. Abre a animação sexy
-    const modal = document.getElementById('dayModal');
-    modal.classList.add('active');
-    
-    // Mantém a sidebar atualizada também
-    document.getElementById('selDayDate').textContent = ds.split('-').reverse().slice(0,2).join('/');
-}
-
-// Função para fechar a janela
-function closeDayModal() {
-    document.getElementById('dayModal').classList.remove('active');
-}
-
-// Função para marcar como concluído de dentro da janela
-async function toggleStatusFromModal() {
-    await toggleStatus(); 
-    closeDayModal();
-}
-
-async function saveData() {
-  const note = document.getElementById('dayNotes').value;
-  const isDone = dbData[selectedDate]?.is_done || false;
-  await supabaseClient.from('calendar_data').upsert({ date_id: selectedDate, note_text: note, is_done: isDone });
-  await fetchAll();
-  renderCalendar();
-  updateActivityPanel();
-  alert("Nota salva!");
-}
-
-async function toggleStatus() {
-  const current = dbData[selectedDate]?.is_done || false;
-  await supabaseClient.from('calendar_data').upsert({ 
-    date_id: selectedDate, is_done: !current, note_text: document.getElementById('dayNotes').value
-  });
-  await fetchAll();
-  renderCalendar();
-  selectDay(selectedDate);
-  updateActivityPanel();
-}
-
-function updateActivityPanel() {
-  const activityDiv = document.getElementById('recentActivity');
-  const items = Object.values(dbData)
-    .filter(d => d.note_text)
-    .sort((a, b) => b.date_id.localeCompare(a.date_id))
-    .slice(0, 2);
-
-  if (items.length > 0) {
-    activityDiv.innerHTML = items.map(i => `
-      <div style="border-left:2px solid var(--red); padding-left:8px; margin-bottom:10px;">
-        <div style="color:white; font-weight:bold;">DIA ${i.date_id.split('-').reverse().join('/')}</div>
-        <div style="color:var(--gray); font-style:italic;">"${i.note_text.substring(0,25)}..."</div>
-      </div>
-    `).join('');
-  }
-}
-
-init();
-</script><div id="dayModal" class="modal-overlay" onclick="closeDayModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <span class="close-modal" onclick="closeDayModal()">&times;</span>
-        <div id="modalDate" style="font-family:'Bebas Neue'; font-size: 52px; color: var(--red); line-height:1;">--/--</div>
-        <div id="modalPhase" style="font-size: 11px; color: var(--gray); letter-spacing: 3px; margin-bottom: 25px; text-transform: uppercase;"></div>
+    for(let i = 12; i <= 42; i++) {
+        const d = i > 31 ? i - 31 : i;
+        const m = i > 31 ? '06' : '05';
+        const ds = `2026-${m}-${String(d).padStart(2, '0')}`;
         
-        <div style="background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="font-size: 10px; color: var(--red); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">NOTAS DA EQUIPE:</div>
-            <div id="modalNotesDisplay" style="font-family: 'Barlow Condensed'; font-size: 18px; color: var(--white); line-height: 1.4;"></div>
-        </div>
+        const card = document.createElement('div');
+        card.className = 'day-cell';
+        card.innerHTML = `
+            <div style="font-family: 'Bebas Neue'; font-size: 32px; color: var(--red);">${d}</div>
+            <div style="font-size: 10px; color: var(--gray);">${m}/2026</div>
+        `;
+        card.onclick = () => openDay(ds);
+        grid.appendChild(card);
+    }
+}
 
-        <button class="mark-btn" id="modalBtn" onclick="toggleStatusFromModal()" style="margin-top: 25px; border-radius: 12px;">MARCAR CONCLUÍDO</button>
-    </div>
-</div>
+// 4. EXPANSÃO (FULLSCREEN)
+async function openDay(ds) {
+    currentDay = ds;
+    document.getElementById('exDate').innerText = ds.split('-').reverse().slice(0,2).join('/');
+    document.getElementById('dayExpansion').classList.add('show');
+    
+    renderDayDetails();
+    
+    // Log de atividade
+    await supabase.from('team_presence').upsert({ user_name: user.name, current_day: ds });
+    addLog(`<b>${user.name}</b> está analisando o dia ${ds.split('-').reverse().join('/')}`);
+}
+
+function closeDay() {
+    document.getElementById('dayExpansion').classList.remove('show');
+}
+
+// 5. TAREFAS E CHECKLIST
+function renderDayDetails() {
+    const list = document.getElementById('taskList');
+    const dayTasks = dataCache.tasks.filter(t => t.date_id === currentDay);
+    
+    // Lógica da Fila: Pendentes em cima, Concluídas em baixo
+    dayTasks.sort((a,b) => a.is_done - b.is_done);
+    
+    list.innerHTML = dayTasks.map(t => `
+        <div class="task-card ${t.is_done ? 'completed' : ''}">
+            <div class="check-box" onclick="toggleTask('${t.id}', ${t.is_done})">
+                ${t.is_done ? '✓' : ''}
+            </div>
+            <div style="flex: 1">
+                <div style="font-weight: 600; font-size: 18px;">${t.task_text}</div>
+                <div style="font-size: 10px; color: var(--gray); margin-top: 4px;">POR: ${t.created_by}</div>
+            </div>
+            <div style="font-size: 18px; cursor: pointer;" onclick="addReaction('${t.id}')">🚀</div>
+        </div>
+    `).join('');
+}
+
+async function createNewTask() {
+    const text = prompt("Defina a nova tarefa:");
+    if(!text) return;
+    await supabase.from('tasks').insert({ date_id: currentDay, task_text: text, created_by: user.name });
+}
+
+async function toggleTask(id, status) {
+    await supabase.from('tasks').update({ is_done: !status, completed_by: user.name }).eq('id', id);
+    addLog(`<b>${user.name}</b> ${!status ? 'concluiu' : 'reabriu'} uma tarefa.`);
+}
+
+// 6. REALTIME E PRESENÇA
+function setupSubscriptions() {
+    supabase.channel('db_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadInitialData().then(renderDayDetails))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_presence' }, () => loadInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'interactions' }, () => loadInitialData())
+        .subscribe();
+}
+
+function startHeartbeat() {
+    setInterval(async () => {
+        const mins = Math.floor((Date.now() - user.start) / 60000);
+        await supabase.from('team_presence').upsert({ 
+            user_name: user.name, 
+            avatar_url: user.photo, 
+            total_minutes: mins,
+            last_seen: new Date().toISOString(),
+            is_online: true
+        });
+    }, 15000);
+}
+
+function updatePresenceUI() {
+    const bar = document.getElementById('presenceBar');
+    bar.innerHTML = dataCache.presence.map(p => `
+        <div class="avatar-circle" title="${p.user_name} | ${p.total_minutes} min online">
+            <img src="${p.avatar_url}">
+            <div class="status-dot" style="background: ${p.is_online ? '#5cdb5c' : '#444'}"></div>
+        </div>
+    `).join('');
+}
+
+// 7. ESTÉTICA TEMPORAL E LOGS
+function applyTemporalVibe() {
+    const hour = new Date().getHours();
+    const body = document.getElementById('dynamicBody');
+    if(hour >= 18 || hour <= 5) {
+        body.style.background = "var(--bg-night)";
+    } else {
+        body.style.background = "var(--bg-morning)";
+    }
+}
+
+function addLog(msg) {
+    const container = document.getElementById('logContainer');
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    container.prepend(div);
+}
+
+function sendPing() {
+    alert("NOTIFICAÇÃO ENVIADA PARA O TIME!");
+    addLog(`<b>${user.name}</b> enviou um PING no dia ${currentDay}`);
+}
+
+async function saveNote() {
+    const content = document.getElementById('noteInput').value;
+    if(!content) return;
+    await supabase.from('interactions').insert({ 
+        date_id: currentDay, user_name: user.name, content: content, type: 'comment' 
+    });
+    document.getElementById('noteInput').value = '';
+    addLog(`<b>${user.name}</b> postou um comentário no dia ${currentDay}`);
+}
+
+</script>
 </body>
 </html>

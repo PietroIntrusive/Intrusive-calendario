@@ -260,6 +260,10 @@
             <button class="btn-outline" onclick="closeDay()" style="margin:0; align-self:flex-start;">✕ FECHAR</button>
         </div>
         <div id="exPhaseBadge" class="ex-phase-badge hidden"></div>
+        <div class="progress-container">
+    <div id="progressFill"></div>
+</div>
+
         <div id="taskList"></div>
         <div class="btn-actions">
             <button class="btn-premium" onclick="createNewTask()">+ NOVA TAREFA</button>
@@ -480,7 +484,35 @@ function renderTasks() {
             <div class="task-del" onclick="deleteTask('${t.id}')">✕</div>
         </div>`).join('');
 }
+async function updateDayProgress() {
+    const dayTasks = cache.tasks.filter(t => t.date_id === currentDay);
+    if (dayTasks.length === 0) return;
 
+    const doneTasks = dayTasks.filter(t => t.is_done);
+    const progress = Math.round((doneTasks.length / dayTasks.length) * 100);
+
+    // Atualiza a barra visualmente
+    const fill = document.getElementById('progressFill');
+    if (fill) fill.style.width = progress + "%";
+
+    // Atualiza o texto do botão
+    const btn = document.getElementById('dayDoneBtn');
+    if (btn) btn.innerHTML = progress === 100 ? "✓ DIA CONCLUÍDO" : `CONCLUIR DIA (${progress}%)`;
+
+    // AUTOMAÇÃO EXTRA: Se chegou em 100% e o dia ainda não está na tabela 'done_days'
+    if (progress === 100) {
+        const jaEstaConcluido = cache.doneDays.some(d => d.date_id === currentDay);
+        if (!jaEstaConcluido) {
+            console.log("Automação: Marcando dia como concluído no banco...");
+            await db.from('done_days').upsert({ 
+                date_id: currentDay, 
+                marked_by: user.name 
+            });
+        }
+    }
+}
+
+   
 async function createNewTask() {
     const txt = prompt('Nova tarefa:');
     if (!txt || !txt.trim()) return;
@@ -499,13 +531,17 @@ async function toggleTask(id) {
     const task = cache.tasks.find(t => t.id === id);
     if (!task) return;
     const { error } = await db.from('tasks').update({ is_done: !task.is_done }).eq('id', id);
-    if (!error) { task.is_done = !task.is_done; renderTasks(); renderCalendar(); }
+    if (!error) { task.is_done = !task.is_done; renderTasks();
+renderCalendar();
+updateDayProgress(); }
 }
 
 async function deleteTask(id) {
     if (!confirm('Excluir esta tarefa?')) return;
     const { error } = await db.from('tasks').delete().eq('id', id);
-    if (!error) { cache.tasks = cache.tasks.filter(t => t.id !== id); renderTasks(); renderCalendar(); }
+    if (!error) { cache.tasks = cache.tasks.filter(t => t.id !== id); renderTasks();
+renderCalendar();
+updateDayProgress(); }
 }
 
 async function toggleDayDone() {

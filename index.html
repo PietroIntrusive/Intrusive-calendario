@@ -3,187 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INTRUSIVE — COMMAND CENTER</title>
-
-    <!-- Fontes -->
+    <title>INTRUSIVE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-
-    <!-- CSS modularizado -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Supabase JS (define window.supabase globalmente) -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="src/config.js"></script>
 </head>
-<body>
+<body style="overflow: hidden;">
 
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ LOGIN — primeira tela, captura nome + foto opcional                  ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div id="loginOverlay">
-    <div class="login-card">
-        <div class="intrusive-brand" style="font-size: 54px; margin-bottom: 6px;">INTRUSIVE</div>
-        <div style="font-size: 11px; letter-spacing: 5px; color: var(--gray); margin-bottom: 30px;">COMMAND CENTER</div>
-        <input id="userName"   class="login-input" placeholder="SEU NOME" type="text" maxlength="40" autocomplete="off">
-        <input id="userAvatar" class="login-input" placeholder="LINK DA FOTO (OPCIONAL)" type="text" style="margin-bottom: 30px;" maxlength="500" autocomplete="off">
-        <div class="login-error" id="loginError"></div>
-        <button class="btn-premium" style="width:100%; margin-top:0;" onclick="initCommandCenter()">INICIAR SESSÃO</button>
+<div id="portal" class="portal">
+    <div class="portal-top">
+        <span>INTRUSIVE · MMXXVI</span>
+        <span><span class="red">●</span> ENTRANCE OPEN</span>
+    </div>
+
+    <div class="portal-mark">INTRU<em>S</em>IVE</div>
+    <div class="portal-line">
+        "some people wear clothes. others wear <em>identity</em>."<br>
+        você não chegou aqui por acaso.
+    </div>
+
+    <div class="portal-paths">
+        <button class="portal-btn primary" onclick="goLanding()">
+            <span>ENTRAR</span>
+            <span class="arrow">→</span>
+        </button>
+        <button class="portal-btn staff" onclick="goStaff()">
+            <span>ACESSO STAFF</span>
+            <span class="arrow">↗</span>
+        </button>
+    </div>
+
+    <div class="portal-foot">
+        <span><span class="pulse"></span>SÃO PAULO · BR</span>
+        <span class="red">NOT FOR EVERYONE</span>
     </div>
 </div>
 
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ HEADER — marca + status de sync + avatares da equipe online          ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div class="header">
-    <div style="display:flex; align-items:baseline; gap:12px;">
-        <div class="intrusive-brand" style="font-size:34px;">INTRUSIVE</div>
-        <div style="font-size:11px; letter-spacing:3px; color:var(--gray);">COMMAND CENTER</div>
-    </div>
-    <div class="header-right">
-        <!-- COUNTDOWN até 12/07/2026 (LANÇAMENTO) -->
-        <div class="countdown" id="countdown" title="Contagem regressiva até o LANÇAMENTO">
-            <span class="countdown-label">LANÇAMENTO EM</span>
-            <span class="countdown-value" id="countdownValue">--D --H --M --S</span>
-        </div>
-        <div class="sync-dot" id="syncStatus">OFFLINE</div>
-        <div id="presenceBar" style="display:flex; gap:6px; align-items:center;"></div>
-    </div>
-</div>
+<script>
+(async function() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+        window.location.replace('app.html');
+        return;
+    }
+})();
 
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ MAIN LAYOUT — sidebar de atividade + calendário                      ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div class="master-layout">
-    <div class="activity-sidebar">
-        <!-- ── BLOCO 1: ATIVIDADE (topo da sidebar) ─────────────────────── -->
-        <div class="sidebar-section sidebar-activity">
-            <div class="sidebar-title">ATIVIDADE</div>
-            <div id="logContainer"><div class="log-empty">AGUARDANDO ATIVIDADE</div></div>
-        </div>
+function goLanding() {
+    window.location.href = 'landing.html';
+}
 
-        <!-- ── BLOCO 2: BLOCO DE NOTAS / CHAT (parte inferior, clicável) ── -->
-        <div class="sidebar-section sidebar-notepad" onclick="openNotepad()">
-            <div class="sidebar-title notepad-title">
-                <span>BLOCO DE NOTAS</span>
-                <span class="notepad-expand-hint">EXPANDIR ↗</span>
-            </div>
-            <div id="notepadPreview" class="notepad-preview">
-                <div class="notepad-empty">NENHUMA NOTA — CLIQUE PARA ESCREVER</div>
-            </div>
-        </div>
-    </div>
-    <div class="calendar-container" id="calendarArea"></div>
-</div>
-
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ NOTEPAD OVERLAY — chat/bloco de notas em tela cheia (respeita sidebar)║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div id="notepadOverlay" class="notepad-overlay" onclick="closeNotepad()">
-    <div class="notepad-content" onclick="event.stopPropagation()">
-        <div class="notepad-header">
-            <div>
-                <div class="notepad-h1">BLOCO DE NOTAS</div>
-                <div class="notepad-sub" id="notepadCount">CHAT COLABORATIVO DO TIME</div>
-            </div>
-            <button class="btn-outline" onclick="closeNotepad()" style="margin:0;">✕ FECHAR</button>
-        </div>
-
-        <div id="notepadMessages" class="notepad-messages">
-            <div class="notepad-empty">SEM MENSAGENS AINDA — SEJA O PRIMEIRO A ESCREVER</div>
-        </div>
-
-        <div class="notepad-input-bar">
-            <input id="notepadInput" class="notepad-input" type="text"
-                   placeholder="Escreva uma nota ou mensagem e pressione Enter..."
-                   maxlength="500" autocomplete="off">
-            <button class="btn-premium notepad-send" onclick="sendNote()">ENVIAR</button>
-        </div>
-    </div>
-</div>
-
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ DAY EXPANSION — overlay que abre quando um dia é clicado             ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div id="dayExpansion" class="expansion-overlay" onclick="closeDay()">
-    <div class="expansion-content" onclick="event.stopPropagation()">
-        <div class="ex-header">
-            <div class="ex-date" id="exDate">--/--</div>
-            <button class="btn-outline" onclick="closeDay()" style="margin:0; align-self:flex-start;">✕ FECHAR</button>
-        </div>
-        <div id="exPhaseBadge" class="ex-phase-badge hidden"></div>
-
-        <div class="progress-container">
-            <div id="progressFill"></div>
-        </div>
-
-        <div id="taskList"></div>
-
-        <!-- ── INPUT INLINE PARA NOVA TAREFA (substitui o prompt feio) ── -->
-        <div id="newTaskBox" class="new-task-box hidden">
-            <div class="new-task-label">NOVA TAREFA</div>
-            <input id="newTaskInput" class="new-task-input" type="text"
-                   placeholder="Escreva e pressione Enter..." maxlength="280" autocomplete="off">
-            <div class="new-task-actions">
-                <button class="btn-premium new-task-submit" onclick="submitInlineTask()">ADICIONAR</button>
-                <button class="btn-outline new-task-cancel" onclick="cancelInlineTask()">CANCELAR</button>
-            </div>
-        </div>
-
-        <div class="btn-actions" id="dayActions">
-            <button class="btn-premium" onclick="openInlineTaskInput()">+ NOVA TAREFA</button>
-            <button class="btn-outline" id="dayDoneBtn" onclick="toggleDayDone()">MARCAR DIA COMO FEITO</button>
-        </div>
-    </div>
-</div>
-
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ ROLLOVER TOAST — aviso quando tarefas pendentes são movidas          ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div id="rolloverToast" class="rollover-toast">
-    <div class="toast-icon">⚠</div>
-    <div class="toast-body">
-        <div class="toast-title">TAREFAS MOVIDAS</div>
-        <div class="toast-subtitle" id="toastSubtitle"></div>
-        <div class="toast-tasks" id="toastTaskList"></div>
-    </div>
-    <div class="toast-close" onclick="dismissToast()">✕</div>
-    <div class="toast-progress" id="toastProgress"></div>
-</div>
-
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ RANKING FAB — botão flutuante no canto inferior esquerdo             ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<button id="rankingFab" class="ranking-fab hidden" onclick="openRanking()" title="Ranking do time">
-    <span class="fab-icon">★</span>
-    <span class="fab-label">RANKING</span>
-    <span class="fab-mypoints" id="fabMyPoints">0</span>
-</button>
-
-<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
-<!-- ║ RANKING MODAL — leaderboard com os top performers                    ║ -->
-<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
-<div id="rankingOverlay" class="expansion-overlay" onclick="closeRanking()">
-    <div class="expansion-content ranking-content" onclick="event.stopPropagation()">
-        <div class="ex-header">
-            <div>
-                <div class="ranking-title">★ TOP PERFORMERS</div>
-                <div class="ranking-subtitle" id="rankingSubtitle">CARREGANDO...</div>
-            </div>
-            <button class="btn-outline" onclick="closeRanking()" style="margin:0;">✕ FECHAR</button>
-        </div>
-
-        <div class="ranking-formula">
-            <span>SCORE</span> = <span class="formula-blue">MINUTOS NO SITE</span> + (<span class="formula-green">TAREFAS CONCLUÍDAS</span> × 10)
-        </div>
-
-        <div id="rankingList" class="ranking-list">
-            <div class="ranking-empty">CARREGANDO DADOS DO TIME...</div>
-        </div>
-    </div>
-</div>
-
-<!-- App JS modularizado -->
-<script src="app.js" defer></script>
+function goStaff() {
+    window.location.href = 'login.html';
+}
+</script>
 </body>
 </html>

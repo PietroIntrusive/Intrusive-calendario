@@ -1,140 +1,74 @@
-/* ════════════════════════════════════════════════════════════════════════
-   INTRUSIVE — COMMAND CENTER
-   app.js — toda a lógica do command center
+/*
+   INTRUSIVE - COMMAND CENTER
+   Main application orchestration.
+   Shared configuration lives in src/config.js.
+   Project calendar domain constants live in src/project.js.
+*/
 
-   SEÇÕES:
-     1.  CONFIG (Supabase)
-     2.  ESTADO global
-     3.  CONSTANTES (data, fases, meses)
-     4.  LOGIN
-     5.  DADOS (carregar do banco)
-     6.  ROLLOVER (mover pendentes)
-     7.  TOAST do rollover
-     8.  REALTIME (subscriptions)
-     9.  CALENDÁRIO
-     10. OVERLAY DO DIA (abrir/fechar)
-     11. PROGRESSO DO DIA
-     12. TAREFAS — render + criar + alternar + excluir
-     13. NOVA TAREFA inline (substitui o prompt)
-     14. EDIÇÃO de tarefa inline
-     15. PRESENÇA do time
-     16. ACTIVITY LOG (sidebar)
-     17. RANKING — tracker + push + render
-     18. UTILS (escape HTML, etc)
-   ════════════════════════════════════════════════════════════════════════ */
-
-
-/* ── 1. CONFIG ──────────────────────────────────────────────────────────── */
-const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
-const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
-
-// O CDN do supabase-js define window.supabase globalmente.
-// Por isso usamos "db" em vez de "supabase" para evitar conflito de nome.
-const db = window.supabase.createClient(SB_URL, SB_KEY);
-
-
-/* ── 2. ESTADO ──────────────────────────────────────────────────────────── */
-let user       = { name: '', photo: '' };
+let user = { name: '', photo: '' };
 let currentDay = '';
-let actLog     = [];
-let cache      = { tasks: [], presence: [], doneDays: [], notes: [] };
+let actLog = [];
+let cache = { tasks: [], presence: [], doneDays: [], notes: [] };
 let toastTimer = null;
 
-// estado da edição inline de tarefas
 let editingTaskId = null;
 
-// estado do session tracker (ranking)
-let sessionDeltaSec   = 0;     // segundos acumulados desde o último push ao banco
-let pendingTaskDelta  = 0;     // tarefas concluídas desde o último push (pode ser negativo)
-let myStats           = { time: 0, tasks: 0 };
-let rankingEnabled    = true;  // desligado automaticamente se a tabela não existir
+let sessionDeltaSec = 0;
+let pendingTaskDelta = 0;
+let myStats = { time: 0, tasks: 0 };
+let rankingEnabled = true;
 
-// estado do bloco de notas / chat colaborativo
-let notesEnabled      = true;  // desligado automaticamente se a tabela não existir
+let notesEnabled = true;
+/* ── 4. AUTH — verifica sessão e inicializa o app ───────────────────────── */
+(async function bootstrap() {
+    // Busca a sessão ativa do Supabase Auth
+    const { data: { session } } = await db.auth.getSession();
 
-
-/* ── 3. CONSTANTES ──────────────────────────────────────────────────────── */
-
-// data de hoje, dinâmica (NUNCA hardcode aqui)
-const TODAY = new Date().toISOString().split('T')[0];
-
-// fases do projeto
-const PHASES = {
-    1: { name: 'FUNDAÇÃO',       color: '#1D9E75', s: '2026-05-12', e: '2026-05-25' },
-    2: { name: 'IDENTIDADE',     color: '#378ADD', s: '2026-05-26', e: '2026-06-08' },
-    3: { name: 'PRODUÇÃO',       color: '#BA7517', s: '2026-06-09', e: '2026-06-22' },
-    4: { name: 'PRÉ-LANÇAMENTO', color: '#A32D2D', s: '2026-06-23', e: '2026-07-07' },
-    5: { name: 'LANÇAMENTO',     color: '#1D9E75', s: '2026-07-08', e: '2026-07-12' },
-};
-function getPhase(ds) {
-    for (const [n, p] of Object.entries(PHASES))
-        if (ds >= p.s && ds <= p.e) return { num: parseInt(n), ...p };
-    return null;
-}
-
-// meses exibidos no grid + nomes dos dias da semana
-const MONTHS = [
-    { y: 2026, m: 4, n: 'MAIO'  },
-    { y: 2026, m: 5, n: 'JUNHO' },
-    { y: 2026, m: 6, n: 'JULHO' },
-];
-const WDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
-
-// data-alvo do countdown = última data do calendário (fim do LANÇAMENTO)
-// Pegamos automaticamente o maior `e` (end) dentro de PHASES — assim, quando
-// você expandir o projeto adicionando novas fases, o countdown se ajusta sozinho.
-const PROJECT_END = Object.values(PHASES)
-    .reduce((max, p) => p.e > max ? p.e : max, '0000-00-00');
-const COUNTDOWN_TARGET = new Date(PROJECT_END + 'T23:59:59');
-
-function inRange(ds) { return ds >= '2026-05-12' && ds <= '2026-07-12'; }
-function isPast(ds)  { return ds < TODAY; }
-function dStr(y, m, d) {
-    return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-}
-
-
-/* ── 4. LOGIN ───────────────────────────────────────────────────────────── */
-async function initCommandCenter() {
-    const name = document.getElementById('userName').value.trim();
-    if (!name) {
-        document.getElementById('loginError').textContent = 'DIGITE SEU NOME PARA ENTRAR.';
+    // Sem sessão → vai para o login do staff
+    if (!session) {
+        window.location.replace('login.html');
         return;
     }
-    user.name  = name;
-    user.photo = document.getElementById('userAvatar').value.trim() ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e63022&color=fff&bold=true`;
 
-    const overlay = document.getElementById('loginOverlay');
-    overlay.classList.add('fade-out');
-    setTimeout(() => overlay.style.display = 'none', 400);
+    // Extrai dados do usuário autenticado
+    const authUser = session.user;
+    const meta     = authUser.user_metadata || {};
 
+    // Nome de exibição: metadata do usuário, ou prefixo do e-mail em maiúsculo
+    user.name  = meta.display_name || meta.full_name ||
+                 authUser.email.split('@')[0].replace(/[._-]/g, ' ').toUpperCase();
+
+    // Avatar: metadata ou ui-avatars gerado
+    user.photo = meta.avatar_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=e63022&color=fff&bold=true`;
+
+    // Atualiza header com nome e avatar do usuário logado
+    const headerUser = document.getElementById('headerUser');
+    const headerName = document.getElementById('headerUserName');
+    const headerAva  = document.getElementById('headerAvatar');
+    if (headerUser) headerUser.style.display = 'flex';
+    if (headerName) headerName.textContent   = user.name;
+    if (headerAva)  headerAva.src            = user.photo;
+
+    // Inicializa o app normalmente
     setSyncStatus(false);
     await loadData();
-
-    // move tarefas pendentes de dias anteriores para hoje
     await rolloverTasks();
-
     renderCalendar();
     subscribeRealtime();
     heartbeat();
     setInterval(heartbeat, 20000);
-
-    // inicia o ranking (tracker de tempo e tarefas)
     initSessionTracker();
-
-    // inicia o countdown até a última data do projeto
     startCountdown();
-
-    // carrega o bloco de notas / chat colaborativo
     await loadNotes();
     renderNotepadPreview();
-}
+})();
 
-// permite enviar com Enter no campo de nome
-document.getElementById('userName').addEventListener('keydown', e => {
-    if (e.key === 'Enter') initCommandCenter();
-});
+/* Logout — encerra sessão e volta pro portal */
+async function logout() {
+    await db.auth.signOut();
+    window.location.replace('index.html');
+}
 
 
 /* ── 5. DADOS ───────────────────────────────────────────────────────────── */
@@ -1150,12 +1084,11 @@ async function sendNote() {
     const sendBtn = document.querySelector('.notepad-send');
     if (sendBtn) sendBtn.disabled = true;
 
-    // .select().single() retorna a linha inserida com id e created_at do banco
-    const { data, error } = await db.from('team_notes').insert({
+    const { error } = await db.from('team_notes').insert({
         user_name:  user.name,
         avatar_url: user.photo,
         message:    txt,
-    }).select().single();
+    });
 
     if (sendBtn) sendBtn.disabled = false;
 
@@ -1167,15 +1100,7 @@ async function sendNote() {
 
     input.value = '';
     input.focus();
-
-    // Atualiza o cache imediatamente (sem esperar o Realtime)
-    // O listener do Realtime vai deduplicar usando o id
-    if (data && !cache.notes.find(n => n.id === data.id)) {
-        cache.notes.push(data);
-        renderNotepadMessages();
-        renderNotepadPreview();
-    }
-
+    // o realtime vai renderizar — mas re-renderizamos pra UX imediata se o realtime atrasar
     addLog('Você enviou uma nota');
 }
 

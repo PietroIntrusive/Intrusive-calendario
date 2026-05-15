@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTRUSIVE — ACESSO RESTRITO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="src/config.js" defer></script>
+    <script src="src/project.js" defer></script>
+</head>
+<body class="landing-body">
+
+<div class="landing-grid" aria-hidden="true"></div>
+<div class="landing-scanlines" aria-hidden="true"></div>
+
+<!-- BOTÃO DE SAÍDA — pra quem não é staff voltar pra marca rapidinho -->
+<a href="landing.html" class="exit-btn" title="Ver a marca">
+    <span class="exit-arrow">←</span>
+    <span class="exit-label">VOLTAR PRA MARCA</span>
+</a>
+
+<div class="landing-wrapper">
+
+    <div class="landing-left">
+        <div class="landing-eyebrow">
+            <span class="eyebrow-dot"></span>
+            ÁREA RESTRITA · MEMBROS APROVADOS
+        </div>
+
+        <div class="landing-logo">
+            INTRU<span>S</span>IVE
+        </div>
+
+        <div class="landing-tagline">COMMAND CENTER</div>
+
+        <div class="landing-desc">
+            UM ECOSSISTEMA OPERACIONAL PARA TIMES<br>
+            QUE CONSTROEM NO ESCURO E LANÇAM NA LUZ.
+        </div>
+
+        <div class="landing-stats">
+            <div class="stat-item">
+                <div class="stat-num" id="landingCountdown">--D --H --M</div>
+                <div class="stat-label">ATÉ O LANÇAMENTO</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-num" style="color: var(--green);">ONLINE</div>
+                <div class="stat-label">SISTEMA OPERACIONAL</div>
+            </div>
+        </div>
+
+        <div class="landing-badge">
+            <span class="badge-dot"></span>
+            ACESSO CONTROLADO — SOMENTE TIME INTRUSIVE
+        </div>
+    </div>
+
+    <div class="landing-right">
+        <div class="landing-login-card">
+
+            <div class="llc-header">
+                <div class="llc-brand">⬛ INTRUSIVE</div>
+                <div class="llc-title">ENTRAR</div>
+                <div class="llc-sub">CREDENCIAIS DO TIME</div>
+            </div>
+
+            <form class="llc-body" id="loginForm" method="post" action="#" autocomplete="on" novalidate>
+                <div class="llc-field">
+                    <label for="loginEmail" class="llc-field-label">E-MAIL</label>
+                    <input
+                        id="loginEmail"
+                        name="email"
+                        class="llc-input"
+                        type="email"
+                        placeholder="seu@email.com"
+                        autocomplete="username"
+                        spellcheck="false"
+                        required
+                    >
+                </div>
+
+                <div class="llc-field">
+                    <label for="loginPassword" class="llc-field-label">SENHA</label>
+                    <input
+                        id="loginPassword"
+                        name="password"
+                        class="llc-input llc-input-password"
+                        type="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <div class="login-error" id="loginError"></div>
+
+                <button class="btn-premium llc-btn" id="loginBtn" type="submit">
+                    ACESSAR COMMAND CENTER
+                </button>
+
+                <div class="llc-footer">
+                    <span>NÃO TEM ACESSO?</span>
+                    <span style="color: var(--red); letter-spacing: 2px;">FALE COM O ADMINISTRADOR</span>
+                </div>
+
+                <a href="landing.html" class="llc-back-link">
+                    NÃO É DO TIME? <span>VER A MARCA →</span>
+                </a>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script src="src/login.js" defer></script>
+</body>
+</html>

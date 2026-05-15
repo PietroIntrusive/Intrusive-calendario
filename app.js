@@ -1150,11 +1150,12 @@ async function sendNote() {
     const sendBtn = document.querySelector('.notepad-send');
     if (sendBtn) sendBtn.disabled = true;
 
-    const { error } = await db.from('team_notes').insert({
+    // .select().single() retorna a linha inserida com id e created_at do banco
+    const { data, error } = await db.from('team_notes').insert({
         user_name:  user.name,
         avatar_url: user.photo,
         message:    txt,
-    });
+    }).select().single();
 
     if (sendBtn) sendBtn.disabled = false;
 
@@ -1166,7 +1167,15 @@ async function sendNote() {
 
     input.value = '';
     input.focus();
-    // o realtime vai renderizar — mas re-renderizamos pra UX imediata se o realtime atrasar
+
+    // Atualiza o cache imediatamente (sem esperar o Realtime)
+    // O listener do Realtime vai deduplicar usando o id
+    if (data && !cache.notes.find(n => n.id === data.id)) {
+        cache.notes.push(data);
+        renderNotepadMessages();
+        renderNotepadPreview();
+    }
+
     addLog('Você enviou uma nota');
 }
 

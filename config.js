@@ -15,7 +15,7 @@
    ═══════════════════════════════════════════════════════════════════════════
 */
 
-const SUPABASE_URL      = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlYnRwcWpjcGVhdHhreG1pamd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTUzNjAsImV4cCI6MjA5NDE3MTM2MH0.c1hQNNwtRFF3q3WEM3lSunupoeKFx02bhO4kZPnb_GY';
+const SUPABASE_URL      = 'https://SEU-PROJETO.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-AQUI';
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

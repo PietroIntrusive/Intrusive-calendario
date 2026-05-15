@@ -4,342 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INTRUSIVE — COMMAND CENTER</title>
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- CSS modularizado -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase JS (define window.supabase globalmente) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-deep: #050505;
-            --red: #e63022;
-            --orange: #ff6b1a;
-            --white: #f0ece4;
-            --gray: #666;
-            --green: #5cdb5c;
-            --glass: rgba(255,255,255,0.03);
-            --border: rgba(255,255,255,0.08);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
-        body { background: var(--bg-deep); color: var(--white); font-family: 'Barlow Condensed', sans-serif; min-height: 100vh; overflow-x: hidden; }
-
-        /* ── LOGIN ── */
-        #loginOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.4s;
-        }
-        #loginOverlay.fade-out { opacity: 0; pointer-events: none; }
-        .login-card {
-            background: var(--glass); padding: 50px; border-radius: 30px;
-            border: 1px solid var(--border); text-align: center;
-            max-width: 450px; width: 90%;
-        }
-        .login-input {
-            width: 100%; background: transparent; color: var(--white);
-            text-align: center; outline: none; display: block;
-            margin-bottom: 20px; padding-bottom: 8px;
-        }
-        #userName    { font-family: 'Bebas Neue'; font-size: 26px; border-bottom: 2px solid var(--red); }
-        #userAvatar  { font-family: 'Barlow Condensed'; font-size: 14px; border-bottom: 1px solid var(--gray); }
-        .login-error { color: var(--red); font-size: 13px; letter-spacing: 1px; min-height: 18px; margin-bottom: 10px; }
-
-        /* ── HEADER ── */
-        .header {
-            padding: 24px 40px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 100; background: var(--bg-deep);
-        }
-        .intrusive-brand { font-family: 'Bebas Neue'; color: var(--red); letter-spacing: -1px; line-height: 1; }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .sync-dot {
-            font-size: 11px; letter-spacing: 2px;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .sync-dot::before {
-            content: ''; width: 6px; height: 6px; border-radius: 50%;
-            background: var(--gray); display: inline-block;
-            transition: background 0.3s;
-        }
-        .sync-dot.live::before { background: var(--green); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .presence-avatar {
-            width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--green); transition: transform 0.2s;
-        }
-        .presence-avatar:hover { transform: scale(1.1); }
-        .presence-avatar.offline { border-color: #333; filter: grayscale(0.8); opacity: 0.6; }
-
-        /* ── LAYOUT ── */
-        .master-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 80px); }
-
-        /* ── SIDEBAR ── */
-        .activity-sidebar {
-            border-right: 1px solid var(--border); padding: 24px;
-            overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-        }
-        .sidebar-title {
-            font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 3px;
-            color: var(--red); margin-bottom: 14px;
-            padding-bottom: 10px; border-bottom: 1px solid var(--border);
-        }
-        .log-entry {
-            padding: 10px 0; border-bottom: 1px solid var(--border);
-            font-size: 13px; color: var(--gray); line-height: 1.5;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-        .log-user { color: var(--white); font-weight: 700; }
-        .log-time { font-size: 10px; color: #444; letter-spacing: 1px; margin-top: 2px; }
-        .log-empty { color: #333; font-size: 13px; text-align: center; padding: 30px 0; letter-spacing: 2px; }
-
-        /* ── CALENDAR ── */
-        .calendar-container { padding: 30px 36px; overflow-y: auto; }
-        .month-section { margin-bottom: 44px; }
-        .month-header {
-            font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 3px;
-            color: var(--white); margin-bottom: 10px;
-            padding-bottom: 8px; border-bottom: 1px solid var(--border);
-        }
-        .month-header span { color: var(--red); }
-        .weekdays-row {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 5px;
-        }
-        .weekday-lbl {
-            text-align: center; font-size: 10px; letter-spacing: 2px;
-            color: #333; padding: 3px 0;
-        }
-        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-
-        .day-cell {
-            aspect-ratio: 1; background: var(--glass);
-            border: 1px solid var(--border); padding: 10px;
-            border-radius: 4px; cursor: pointer; transition: all 0.2s;
-            display: flex; flex-direction: column;
-            align-items: flex-start; justify-content: space-between;
-            position: relative; overflow: hidden;
-        }
-        .day-cell:hover:not(.cell-empty):not(.cell-outrange) {
-            border-color: var(--red); transform: translateY(-3px);
-            background: rgba(230,48,34,0.05);
-        }
-        .day-cell.cell-empty, .day-cell.cell-outrange { background: transparent; border-color: transparent; cursor: default; opacity: 0.15; }
-        .day-cell.cell-today { border-color: var(--orange); background: rgba(255,107,26,0.06); }
-        .day-cell.cell-done  { border-color: var(--green);  background: rgba(92,219,92,0.05); }
-        .day-cell.cell-past:not(.cell-done) { opacity: 0.4; }
-
-        /* ── DIAS PASSADOS COM TAREFAS INCOMPLETAS ── */
-        .cell-incomplete {
-            border: 2px solid var(--orange) !important;
-            background: rgba(255, 107, 26, 0.05) !important;
-            box-shadow: inset 0 0 10px rgba(255, 107, 26, 0.1);
-            opacity: 1 !important;
-            position: relative;
-        }
-        .cell-incomplete::after {
-            content: "PENDENTE";
-            font-size: 8px;
-            color: var(--orange);
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .cell-num { font-family: 'Bebas Neue'; font-size: 20px; line-height: 1; color: var(--white); }
-        .cell-today .cell-num  { color: var(--orange); }
-        .cell-done  .cell-num  { color: var(--green); }
-
-        .phase-bar { width: 100%; height: 3px; border-radius: 2px; margin-top: auto; }
-        .cell-badge {
-            position: absolute; top: 5px; right: 6px;
-            font-size: 9px; color: var(--gray); font-family: 'Space Mono', monospace;
-        }
-        .cell-check { position: absolute; bottom: 5px; right: 6px; font-size: 12px; color: var(--green); }
-
-        /* ── PROGRESS BAR ── */
-        .progress-container {
-            width: 100%; height: 8px;
-            background: var(--glass); border-radius: 4px;
-            margin-bottom: 25px; overflow: hidden;
-            border: 1px solid var(--border);
-        }
-        #progressFill {
-            height: 100%; width: 0%;
-            background: var(--green);
-            transition: width 0.4s ease;
-            box-shadow: 0 0 10px var(--green);
-        }
-
-        /* ── EXPANSION OVERLAY ── */
-        .expansion-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(24px);
-            z-index: 5000; display: flex; padding: 40px;
-            justify-content: center; align-items: center;
-            visibility: hidden; opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .expansion-overlay.show { visibility: visible; opacity: 1; }
-        .expansion-content {
-            width: 100%; max-width: 780px; background: #080808;
-            border: 1px solid var(--border); padding: 40px; border-radius: 20px;
-            max-height: 88vh; overflow-y: auto;
-            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-        }
-        .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-        .ex-date { font-family: 'Bebas Neue'; font-size: 80px; color: var(--red); line-height: 1; }
-        .ex-phase-badge {
-            display: inline-block; font-size: 11px; letter-spacing: 3px;
-            padding: 4px 12px; border-radius: 2px; margin-bottom: 24px;
-            font-family: 'Barlow Condensed'; font-weight: 600;
-        }
-        .ex-phase-badge.hidden { display: none; }
-
-        /* ── TASKS ── */
-        .task-card {
-            background: var(--glass); border-radius: 12px;
-            padding: 14px 18px; border: 1px solid var(--border);
-            margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
-            transition: border-color 0.2s, opacity 0.2s;
-            animation: fadeIn 0.2s ease;
-        }
-        .task-card:hover { border-color: rgba(255,255,255,0.14); }
-        .task-card.task-done { opacity: 0.45; }
-        .task-card.task-done .task-text { text-decoration: line-through; color: var(--gray); }
-
-        /* Tag visual para tarefas que vieram de rollover */
-        .task-card.task-rolled { border-left: 3px solid var(--orange); }
-        .task-rolled-badge {
-            font-size: 9px; color: var(--orange);
-            font-family: 'Space Mono', monospace;
-            letter-spacing: 1px; white-space: nowrap;
-        }
-
-        .check-box {
-            width: 22px; height: 22px; min-width: 22px;
-            border: 2px solid var(--red); border-radius: 5px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s; font-size: 13px;
-        }
-        .check-box.checked { background: var(--red); color: white; }
-
-        .task-text { flex: 1; font-size: 15px; line-height: 1.3; }
-        .task-author { font-size: 11px; color: #444; white-space: nowrap; }
-        .task-del {
-            width: 22px; height: 22px; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; color: #444;
-            font-size: 14px; border-radius: 4px; transition: all 0.15s;
-        }
-        .task-del:hover { color: var(--red); background: rgba(230,48,34,0.1); }
-        .tasks-empty { text-align: center; padding: 36px; color: #333; font-size: 13px; letter-spacing: 3px; }
-
-        /* ── BUTTONS ── */
-        .btn-premium {
-            background: var(--red); color: white; border: none;
-            padding: 11px 26px; border-radius: 10px;
-            font-family: 'Bebas Neue'; font-size: 17px; letter-spacing: 2px;
-            cursor: pointer; transition: all 0.2s; margin-top: 14px;
-        }
-        .btn-premium:hover { background: var(--orange); transform: translateY(-1px); }
-        .btn-outline {
-            background: transparent; color: var(--gray);
-            border: 1px solid var(--border); padding: 10px 20px;
-            border-radius: 10px; font-family: 'Bebas Neue'; font-size: 16px;
-            letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
-            margin-top: 14px; margin-left: 8px;
-        }
-        .btn-outline:hover { border-color: var(--red); color: var(--red); }
-        .btn-outline.day-done { border-color: var(--green); color: var(--green); }
-        .btn-actions { display: flex; flex-wrap: wrap; gap: 0; }
-
-        /* ── ROLLOVER TOAST ── */
-        /* É o aviso que aparece quando tarefas pendentes são movidas para hoje */
-        .rollover-toast {
-            position: fixed; bottom: 30px; right: 30px; z-index: 9998;
-            background: #0c0c0c; border: 1px solid var(--orange);
-            border-left: 4px solid var(--orange);
-            padding: 18px 20px; border-radius: 14px;
-            display: flex; align-items: flex-start; gap: 14px;
-            max-width: 380px; width: calc(100% - 60px);
-            box-shadow: 0 0 40px rgba(255,107,26,0.2);
-            transform: translateX(calc(100% + 40px));
-            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .rollover-toast.show { transform: translateX(0); }
-        .toast-icon {
-            font-size: 22px; line-height: 1; padding-top: 2px;
-            flex-shrink: 0;
-        }
-        .toast-body { flex: 1; }
-        .toast-title {
-            font-family: 'Bebas Neue'; font-size: 18px;
-            letter-spacing: 3px; color: var(--orange);
-            margin-bottom: 4px;
-        }
-        .toast-subtitle {
-            font-size: 12px; color: var(--gray);
-            letter-spacing: 1px; margin-bottom: 10px;
-        }
-        .toast-tasks {
-            font-size: 12px; color: var(--white);
-            line-height: 1.7; max-height: 100px;
-            overflow-y: auto;
-        }
-        .toast-tasks span { color: var(--orange); font-family: 'Space Mono', monospace; margin-right: 4px; }
-        .toast-close {
-            font-size: 14px; color: #444; cursor: pointer;
-            padding: 2px 4px; border-radius: 4px;
-            transition: color 0.15s; flex-shrink: 0;
-            font-family: 'Barlow Condensed';
-        }
-        .toast-close:hover { color: var(--orange); }
-        .toast-progress {
-            position: absolute; bottom: 0; left: 0;
-            height: 2px; background: var(--orange);
-            border-radius: 0 0 14px 14px;
-            animation: toastTimer 8s linear forwards;
-        }
-        @keyframes toastTimer { from { width: 100%; } to { width: 0%; } }
-
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); }
-    </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ LOGIN — primeira tela, captura nome + foto opcional                  ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
 <div id="loginOverlay">
     <div class="login-card">
         <div class="intrusive-brand" style="font-size: 54px; margin-bottom: 6px;">INTRUSIVE</div>
         <div style="font-size: 11px; letter-spacing: 5px; color: var(--gray); margin-bottom: 30px;">COMMAND CENTER</div>
-        <input id="userName"   class="login-input" placeholder="SEU NOME" type="text">
-        <input id="userAvatar" class="login-input" placeholder="LINK DA FOTO (OPCIONAL)" type="text" style="margin-bottom: 30px;">
+        <input id="userName"   class="login-input" placeholder="SEU NOME" type="text" maxlength="40" autocomplete="off">
+        <input id="userAvatar" class="login-input" placeholder="LINK DA FOTO (OPCIONAL)" type="text" style="margin-bottom: 30px;" maxlength="500" autocomplete="off">
         <div class="login-error" id="loginError"></div>
         <button class="btn-premium" style="width:100%; margin-top:0;" onclick="initCommandCenter()">INICIAR SESSÃO</button>
     </div>
 </div>
 
-<!-- HEADER -->
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ HEADER — marca + status de sync + avatares da equipe online          ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
 <div class="header">
     <div style="display:flex; align-items:baseline; gap:12px;">
         <div class="intrusive-brand" style="font-size:34px;">INTRUSIVE</div>
         <div style="font-size:11px; letter-spacing:3px; color:var(--gray);">COMMAND CENTER</div>
     </div>
     <div class="header-right">
+        <!-- COUNTDOWN até 12/07/2026 (LANÇAMENTO) -->
+        <div class="countdown" id="countdown" title="Contagem regressiva até o LANÇAMENTO">
+            <span class="countdown-label">LANÇAMENTO EM</span>
+            <span class="countdown-value" id="countdownValue">--D --H --M --S</span>
+        </div>
         <div class="sync-dot" id="syncStatus">OFFLINE</div>
         <div id="presenceBar" style="display:flex; gap:6px; align-items:center;"></div>
     </div>
 </div>
 
-<!-- MAIN LAYOUT -->
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ MAIN LAYOUT — sidebar de atividade + calendário                      ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
 <div class="master-layout">
     <div class="activity-sidebar">
-        <div class="sidebar-title">ATIVIDADE</div>
-        <div id="logContainer"><div class="log-empty">AGUARDANDO ATIVIDADE</div></div>
+        <!-- ── BLOCO 1: ATIVIDADE (topo da sidebar) ─────────────────────── -->
+        <div class="sidebar-section sidebar-activity">
+            <div class="sidebar-title">ATIVIDADE</div>
+            <div id="logContainer"><div class="log-empty">AGUARDANDO ATIVIDADE</div></div>
+        </div>
+
+        <!-- ── BLOCO 2: BLOCO DE NOTAS / CHAT (parte inferior, clicável) ── -->
+        <div class="sidebar-section sidebar-notepad" onclick="openNotepad()">
+            <div class="sidebar-title notepad-title">
+                <span>BLOCO DE NOTAS</span>
+                <span class="notepad-expand-hint">EXPANDIR ↗</span>
+            </div>
+            <div id="notepadPreview" class="notepad-preview">
+                <div class="notepad-empty">NENHUMA NOTA — CLIQUE PARA ESCREVER</div>
+            </div>
+        </div>
     </div>
     <div class="calendar-container" id="calendarArea"></div>
 </div>
 
-<!-- DAY EXPANSION -->
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ NOTEPAD OVERLAY — chat/bloco de notas em tela cheia (respeita sidebar)║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
+<div id="notepadOverlay" class="notepad-overlay" onclick="closeNotepad()">
+    <div class="notepad-content" onclick="event.stopPropagation()">
+        <div class="notepad-header">
+            <div>
+                <div class="notepad-h1">BLOCO DE NOTAS</div>
+                <div class="notepad-sub" id="notepadCount">CHAT COLABORATIVO DO TIME</div>
+            </div>
+            <button class="btn-outline" onclick="closeNotepad()" style="margin:0;">✕ FECHAR</button>
+        </div>
+
+        <div id="notepadMessages" class="notepad-messages">
+            <div class="notepad-empty">SEM MENSAGENS AINDA — SEJA O PRIMEIRO A ESCREVER</div>
+        </div>
+
+        <div class="notepad-input-bar">
+            <input id="notepadInput" class="notepad-input" type="text"
+                   placeholder="Escreva uma nota ou mensagem e pressione Enter..."
+                   maxlength="500" autocomplete="off">
+            <button class="btn-premium notepad-send" onclick="sendNote()">ENVIAR</button>
+        </div>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ DAY EXPANSION — overlay que abre quando um dia é clicado             ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
 <div id="dayExpansion" class="expansion-overlay" onclick="closeDay()">
     <div class="expansion-content" onclick="event.stopPropagation()">
         <div class="ex-header">
@@ -347,18 +112,34 @@
             <button class="btn-outline" onclick="closeDay()" style="margin:0; align-self:flex-start;">✕ FECHAR</button>
         </div>
         <div id="exPhaseBadge" class="ex-phase-badge hidden"></div>
+
         <div class="progress-container">
             <div id="progressFill"></div>
         </div>
+
         <div id="taskList"></div>
-        <div class="btn-actions">
-            <button class="btn-premium" onclick="createNewTask()">+ NOVA TAREFA</button>
+
+        <!-- ── INPUT INLINE PARA NOVA TAREFA (substitui o prompt feio) ── -->
+        <div id="newTaskBox" class="new-task-box hidden">
+            <div class="new-task-label">NOVA TAREFA</div>
+            <input id="newTaskInput" class="new-task-input" type="text"
+                   placeholder="Escreva e pressione Enter..." maxlength="280" autocomplete="off">
+            <div class="new-task-actions">
+                <button class="btn-premium new-task-submit" onclick="submitInlineTask()">ADICIONAR</button>
+                <button class="btn-outline new-task-cancel" onclick="cancelInlineTask()">CANCELAR</button>
+            </div>
+        </div>
+
+        <div class="btn-actions" id="dayActions">
+            <button class="btn-premium" onclick="openInlineTaskInput()">+ NOVA TAREFA</button>
             <button class="btn-outline" id="dayDoneBtn" onclick="toggleDayDone()">MARCAR DIA COMO FEITO</button>
         </div>
     </div>
 </div>
 
-<!-- ROLLOVER TOAST (aviso de tarefas movidas) -->
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ ROLLOVER TOAST — aviso quando tarefas pendentes são movidas          ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
 <div id="rolloverToast" class="rollover-toast">
     <div class="toast-icon">⚠</div>
     <div class="toast-body">
@@ -370,456 +151,39 @@
     <div class="toast-progress" id="toastProgress"></div>
 </div>
 
-<script>
-// ── CONFIG ─────────────────────────────────────────────────────────────────
-const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
-const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ RANKING FAB — botão flutuante no canto inferior esquerdo             ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
+<button id="rankingFab" class="ranking-fab hidden" onclick="openRanking()" title="Ranking do time">
+    <span class="fab-icon">★</span>
+    <span class="fab-label">RANKING</span>
+    <span class="fab-mypoints" id="fabMyPoints">0</span>
+</button>
 
-// IMPORTANTE: O CDN já define window.supabase globalmente.
-// Por isso usamos "db" em vez de "supabase" para evitar conflito de nome.
-const db = window.supabase.createClient(SB_URL, SB_KEY);
-
-// ── ESTADO ─────────────────────────────────────────────────────────────────
-let user       = { name: '', photo: '' };
-let currentDay = '';
-let actLog     = [];
-let cache      = { tasks: [], presence: [], doneDays: [] };
-let toastTimer = null;
-
-// ── TODAY (dinâmico — pega a data real do sistema) ──────────────────────────
-// ATENÇÃO: não hardcode a data. Esta linha pega sempre o dia de hoje.
-const TODAY = new Date().toISOString().split('T')[0];
-
-// ── FASES ──────────────────────────────────────────────────────────────────
-const PHASES = {
-    1: { name: 'FUNDAÇÃO',       color: '#1D9E75', s: '2026-05-12', e: '2026-05-25' },
-    2: { name: 'IDENTIDADE',     color: '#378ADD', s: '2026-05-26', e: '2026-06-08' },
-    3: { name: 'PRODUÇÃO',       color: '#BA7517', s: '2026-06-09', e: '2026-06-22' },
-    4: { name: 'PRÉ-LANÇAMENTO', color: '#A32D2D', s: '2026-06-23', e: '2026-07-07' },
-    5: { name: 'LANÇAMENTO',     color: '#1D9E75', s: '2026-07-08', e: '2026-07-12' },
-};
-function getPhase(ds) {
-    for (const [n, p] of Object.entries(PHASES))
-        if (ds >= p.s && ds <= p.e) return { num: parseInt(n), ...p };
-    return null;
-}
-
-// ── LOGIN ──────────────────────────────────────────────────────────────────
-async function initCommandCenter() {
-    const name = document.getElementById('userName').value.trim();
-    if (!name) {
-        document.getElementById('loginError').textContent = 'DIGITE SEU NOME PARA ENTRAR.';
-        return;
-    }
-    user.name  = name;
-    user.photo = document.getElementById('userAvatar').value.trim() ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e63022&color=fff&bold=true`;
-
-    const overlay = document.getElementById('loginOverlay');
-    overlay.classList.add('fade-out');
-    setTimeout(() => overlay.style.display = 'none', 400);
-
-    setSyncStatus(false);
-    await loadData();
-
-    // Roda o rollover logo após carregar os dados.
-    // Isso move tarefas pendentes de dias anteriores para hoje.
-    await rolloverTasks();
-
-    renderCalendar();
-    subscribeRealtime();
-    heartbeat();
-    setInterval(heartbeat, 20000);
-}
-
-document.getElementById('userName').addEventListener('keydown', e => {
-    if (e.key === 'Enter') initCommandCenter();
-});
-
-// ── DADOS ──────────────────────────────────────────────────────────────────
-async function loadData() {
-    try {
-        const [{ data: t, error: te }, { data: p }, { data: d }] = await Promise.all([
-            db.from('tasks').select('*').order('created_at', { ascending: true }),
-            db.from('team_presence').select('*'),
-            db.from('done_days').select('date_id'),
-        ]);
-        if (te) throw te;
-        cache.tasks    = t || [];
-        cache.presence = p || [];
-        cache.doneDays = (d || []).map(r => r.date_id);
-        updatePresenceBar();
-        setSyncStatus(true);
-    } catch (err) {
-        setSyncStatus(false);
-        console.error('[INTRUSIVE] Supabase error:', err);
-    }
-}
-
-// ── ROLLOVER ────────────────────────────────────────────────────────────────
-// Essa função verifica se há tarefas pendentes de dias anteriores.
-// Se houver, move todas para hoje e exibe um aviso na tela.
-async function rolloverTasks() {
-    // Filtra: tarefas com data anterior a hoje E que não foram concluídas
-    const pendingTasks = cache.tasks.filter(t => t.date_id < TODAY && !t.is_done);
-
-    if (pendingTasks.length === 0) return; // Nada a fazer
-
-    // Conta de quantos dias diferentes vieram essas tarefas
-    const daysAffected = [...new Set(pendingTasks.map(t => t.date_id))].length;
-
-    // Envia o update no banco: todas as tarefas incompletas e passadas
-    // vão para a data de hoje
-    const { error } = await db
-        .from('tasks')
-        .update({ date_id: TODAY })
-        .eq('is_done', false)
-        .lt('date_id', TODAY);
-
-    if (error) {
-        console.error('[INTRUSIVE] Erro no rollover:', error);
-        return;
-    }
-
-    // Recarrega o cache do banco com os dados já atualizados
-    await loadData();
-
-    // Registra no log de atividade da sidebar
-    addLog(`${pendingTasks.length} tarefa(s) pendente(s) movida(s) para hoje`);
-
-    // Exibe o toast (aviso visual no canto da tela)
-    showRolloverToast(pendingTasks, daysAffected);
-}
-
-// ── ROLLOVER TOAST ──────────────────────────────────────────────────────────
-// Mostra o aviso bonito no canto inferior direito da tela.
-// Ele some sozinho depois de 8 segundos ou se o usuário fechar.
-function showRolloverToast(tasks, daysCount) {
-    const toast    = document.getElementById('rolloverToast');
-    const subtitle = document.getElementById('toastSubtitle');
-    const taskList = document.getElementById('toastTaskList');
-    const progress = document.getElementById('toastProgress');
-
-    // Monta o texto do subtítulo
-    subtitle.textContent =
-        `${tasks.length} TAREFA${tasks.length > 1 ? 'S' : ''} DE ` +
-        `${daysCount} DIA${daysCount > 1 ? 'S' : ''} ANTERIOR${daysCount > 1 ? 'ES' : ''} → HOJE`;
-
-    // Lista até 5 tarefas pelo nome; se tiver mais mostra "e mais X"
-    const shown = tasks.slice(0, 5);
-    const extra = tasks.length - shown.length;
-    taskList.innerHTML = shown.map(t =>
-        `<div><span>›</span>${escHtml(t.task_text)}</div>`
-    ).join('') + (extra > 0 ? `<div style="color:var(--gray); margin-top:4px;">+ ${extra} mais...</div>` : '');
-
-    // Reinicia a animação da barra de progresso (o truque é recriar o elemento)
-    progress.style.animation = 'none';
-    progress.offsetHeight; // força reflow (o browser "reseta" a animação)
-    progress.style.animation = '';
-
-    // Mostra o toast
-    toast.classList.add('show');
-
-    // Auto-dismiss depois de 8 segundos
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(dismissToast, 8000);
-}
-
-function dismissToast() {
-    document.getElementById('rolloverToast').classList.remove('show');
-    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
-}
-
-// ── REALTIME ────────────────────────────────────────────────────────────────
-function subscribeRealtime() {
-    db.channel('intrusive-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
-            const row = payload.new || payload.old;
-            if (payload.eventType === 'INSERT') {
-                if (!cache.tasks.find(t => t.id === row.id)) cache.tasks.push(row);
-                if (row.created_by !== user.name) addLog(`${row.created_by} adicionou tarefa em ${row.date_id}`);
-            } else if (payload.eventType === 'UPDATE') {
-                cache.tasks = cache.tasks.map(t => t.id === row.id ? row : t);
-            } else if (payload.eventType === 'DELETE') {
-                cache.tasks = cache.tasks.filter(t => t.id !== row.id);
-            }
-            if (currentDay && currentDay === row?.date_id) renderTasks();
-            renderCalendar();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_presence' }, payload => {
-            const row = payload.new;
-            const idx = cache.presence.findIndex(p => p.user_name === row?.user_name);
-            if (idx >= 0) cache.presence[idx] = row; else if (row) cache.presence.push(row);
-            updatePresenceBar();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'done_days' }, payload => {
-            if (payload.eventType === 'INSERT') {
-                const ds = payload.new.date_id;
-                if (!cache.doneDays.includes(ds)) {
-                    cache.doneDays.push(ds);
-                    if (payload.new.marked_by !== user.name) addLog(`${payload.new.marked_by} concluiu o dia ${ds}`);
-                }
-            } else if (payload.eventType === 'DELETE') {
-                cache.doneDays = cache.doneDays.filter(d => d !== payload.old.date_id);
-            }
-            renderCalendar();
-            if (currentDay) updateDayDoneBtn();
-        })
-        .subscribe();
-}
-
-// ── CALENDÁRIO ─────────────────────────────────────────────────────────────
-const MONTHS = [{y:2026,m:4,n:'MAIO'},{y:2026,m:5,n:'JUNHO'},{y:2026,m:6,n:'JULHO'}];
-const WDAYS  = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
-function inRange(ds) { return ds >= '2026-05-12' && ds <= '2026-07-12'; }
-function isPast(ds)  { return ds < TODAY; }
-function dStr(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
-
-function renderCalendar() {
-    const area = document.getElementById('calendarArea');
-    area.innerHTML = '';
-    MONTHS.forEach(({ y, m, n }) => {
-        const firstDay = new Date(y, m, 1).getDay();
-        const lastDay  = new Date(y, m + 1, 0).getDate();
-        let html = `<div class="month-section">
-            <div class="month-header">${n.slice(0,-1)}<span>${n.slice(-1)}</span> ${y}</div>
-            <div class="weekdays-row">${WDAYS.map(w=>`<div class="weekday-lbl">${w}</div>`).join('')}</div>
-            <div class="days-grid">`;
-        for (let i = 0; i < firstDay; i++) html += '<div class="day-cell cell-empty"></div>';
-        for (let d = 1; d <= lastDay; d++) {
-            const ds       = dStr(y, m, d);
-            const ir       = inRange(ds);
-            const ph       = getPhase(ds);
-            const done     = cache.doneDays.includes(ds);
-            const today    = ds === TODAY;
-            const past     = isPast(ds);
-            const dayTasks = cache.tasks.filter(t => t.date_id === ds);
-            const tCnt     = dayTasks.length;
-            const hasOpen  = dayTasks.some(t => !t.is_done);
-
-            if (!ir) {
-                html += `<div class="day-cell cell-outrange"><div class="cell-num">${d}</div></div>`;
-                continue;
-            }
-
-            let cls = 'day-cell';
-            if (done) {
-                cls += ' cell-done';
-            } else if (today) {
-                cls += ' cell-today';
-            } else if (past && hasOpen) {
-                // Dia passado com tarefas ainda abertas → destaque laranja
-                cls += ' cell-incomplete';
-            } else if (past) {
-                cls += ' cell-past';
-            }
-
-            const phColor = ph ? ph.color : 'transparent';
-            html += `<div class="${cls}" onclick="openDay('${ds}')">
-                ${tCnt > 0 ? `<div class="cell-badge">${tCnt}</div>` : ''}
-                <div class="cell-num">${d}</div>
-                <div class="phase-bar" style="background:${phColor}"></div>
-                ${done ? '<div class="cell-check">✓</div>' : ''}
-            </div>`;
-        }
-        html += '</div></div>';
-        area.innerHTML += html;
-    });
-}
-
-// ── OVERLAY DO DIA ─────────────────────────────────────────────────────────
-function openDay(ds) {
-    currentDay = ds;
-    const d = new Date(ds + 'T00:00:00');
-    document.getElementById('exDate').textContent =
-        `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    const ph    = getPhase(ds);
-    const badge = document.getElementById('exPhaseBadge');
-    if (ph) {
-        badge.textContent      = `FASE ${ph.num} — ${ph.name}`;
-        badge.style.background = ph.color + '20';
-        badge.style.border     = `1px solid ${ph.color}`;
-        badge.style.color      = ph.color;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-    document.getElementById('dayExpansion').classList.add('show');
-    renderTasks();
-    updateDayDoneBtn();
-    updateDayProgress();
-}
-
-function closeDay() { document.getElementById('dayExpansion').classList.remove('show'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDay(); });
-
-function updateDayDoneBtn() {
-    const btn = document.getElementById('dayDoneBtn');
-    if (cache.doneDays.includes(currentDay)) {
-        btn.textContent = '✓ DIA CONCLUÍDO — DESMARCAR';
-        btn.classList.add('day-done');
-    } else {
-        btn.textContent = 'MARCAR DIA COMO FEITO';
-        btn.classList.remove('day-done');
-    }
-}
-
-// ── PROGRESSO DO DIA ────────────────────────────────────────────────────────
-async function updateDayProgress() {
-    const dayTasks     = cache.tasks.filter(t => t.date_id === currentDay);
-    const total        = dayTasks.length;
-    const completed    = dayTasks.filter(t => t.is_done).length;
-    const allDone      = total > 0 && completed === total;
-    const progress     = total > 0 ? (completed / total) * 100 : 0;
-    const alreadyDone  = cache.doneDays.includes(currentDay);
-
-    // Atualiza a barra visual
-    const bar = document.getElementById('progressFill');
-    if (bar) bar.style.width = `${progress}%`;
-
-    // Se completou 100%: marca o dia automaticamente no banco
-    if (allDone && !alreadyDone) {
-        const { error } = await db.from('done_days').insert({
-            date_id: currentDay,
-            marked_by: user.name
-        });
-        if (!error) {
-            cache.doneDays.push(currentDay);
-            addLog(`Dia ${currentDay} concluído automaticamente (100%)`);
-        }
-    }
-
-    // Se desmarcou alguma tarefa: remove o dia da lista de concluídos
-    if (!allDone && alreadyDone) {
-        await db.from('done_days').delete().eq('date_id', currentDay);
-        cache.doneDays = cache.doneDays.filter(d => d !== currentDay);
-    }
-
-    updateDayDoneBtn();
-    renderCalendar();
-}
-
-// ── TAREFAS ────────────────────────────────────────────────────────────────
-function renderTasks() {
-    const dayTasks = cache.tasks.filter(t => t.date_id === currentDay);
-    const list     = document.getElementById('taskList');
-    if (!dayTasks.length) {
-        list.innerHTML = '<div class="tasks-empty">NENHUMA TAREFA — ADICIONE UMA</div>';
-        return;
-    }
-    // Tarefas com rolled_from preenchido vieram de outro dia via rollover
-    list.innerHTML = dayTasks.map(t => {
-        const isRolled = t.rolled_from ? true : false;
-        const rolledBadge = isRolled
-            ? `<div class="task-rolled-badge">↑ ${t.rolled_from}</div>`
-            : '';
-        return `
-        <div class="task-card ${t.is_done ? 'task-done' : ''} ${isRolled ? 'task-rolled' : ''}">
-            <div class="check-box ${t.is_done ? 'checked' : ''}" onclick="toggleTask('${t.id}')">
-                ${t.is_done ? '✓' : ''}
+<!-- ╔══════════════════════════════════════════════════════════════════════╗ -->
+<!-- ║ RANKING MODAL — leaderboard com os top performers                    ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════════╝ -->
+<div id="rankingOverlay" class="expansion-overlay" onclick="closeRanking()">
+    <div class="expansion-content ranking-content" onclick="event.stopPropagation()">
+        <div class="ex-header">
+            <div>
+                <div class="ranking-title">★ TOP PERFORMERS</div>
+                <div class="ranking-subtitle" id="rankingSubtitle">CARREGANDO...</div>
             </div>
-            <div class="task-text">
-                ${escHtml(t.task_text)}
-                ${rolledBadge}
-            </div>
-            <div class="task-author">${escHtml(t.created_by || '')}</div>
-            <div class="task-del" onclick="deleteTask('${t.id}')">✕</div>
-        </div>`;
-    }).join('');
-}
+            <button class="btn-outline" onclick="closeRanking()" style="margin:0;">✕ FECHAR</button>
+        </div>
 
-async function createNewTask() {
-    const txt = prompt('Nova tarefa:');
-    if (!txt || !txt.trim()) return;
-    const { error } = await db.from('tasks').insert({
-        date_id: currentDay, task_text: txt.trim(),
-        created_by: user.name, is_done: false,
-    });
-    if (error) { alert('Erro ao salvar: ' + error.message); return; }
-    addLog(`Você adicionou tarefa em ${currentDay}`);
-    await loadData();
-    renderTasks();
-    await updateDayProgress();
-}
+        <div class="ranking-formula">
+            <span>SCORE</span> = <span class="formula-blue">MINUTOS NO SITE</span> + (<span class="formula-green">TAREFAS CONCLUÍDAS</span> × 10)
+        </div>
 
-async function toggleTask(id) {
-    const task = cache.tasks.find(t => t.id === id);
-    if (!task) return;
-    const { error } = await db.from('tasks').update({ is_done: !task.is_done }).eq('id', id);
-    if (!error) {
-        task.is_done = !task.is_done;
-        renderTasks();
-        await updateDayProgress();
-    }
-}
+        <div id="rankingList" class="ranking-list">
+            <div class="ranking-empty">CARREGANDO DADOS DO TIME...</div>
+        </div>
+    </div>
+</div>
 
-async function deleteTask(id) {
-    if (!confirm('Excluir esta tarefa?')) return;
-    const { error } = await db.from('tasks').delete().eq('id', id);
-    if (!error) {
-        cache.tasks = cache.tasks.filter(t => t.id !== id);
-        renderTasks();
-        await updateDayProgress();
-    }
-}
-
-async function toggleDayDone() {
-    if (!currentDay) return;
-    const isDone = cache.doneDays.includes(currentDay);
-    if (isDone) {
-        await db.from('done_days').delete().eq('date_id', currentDay);
-        cache.doneDays = cache.doneDays.filter(d => d !== currentDay);
-    } else {
-        const { error } = await db.from('done_days').insert({ date_id: currentDay, marked_by: user.name });
-        if (error) { alert('Erro: ' + error.message + '\n\nCrie a tabela done_days no Supabase.'); return; }
-        cache.doneDays.push(currentDay);
-        addLog(`Você concluiu o dia ${currentDay}`);
-    }
-    renderCalendar();
-    updateDayDoneBtn();
-}
-
-// ── PRESENÇA ───────────────────────────────────────────────────────────────
-async function heartbeat() {
-    try {
-        await db.from('team_presence').upsert({
-            user_name: user.name, avatar_url: user.photo,
-            is_online: true, last_seen: new Date().toISOString(),
-        }, { onConflict: 'user_name' });
-        await loadData();
-    } catch(e) {}
-}
-
-function updatePresenceBar() {
-    const now = Date.now();
-    document.getElementById('presenceBar').innerHTML = cache.presence.map(p => {
-        const online = (now - new Date(p.last_seen).getTime()) < 60000;
-        return `<img src="${p.avatar_url}" class="presence-avatar ${online?'':'offline'}"
-            title="${p.user_name}${online?'':' (offline)'}" alt="${p.user_name}">`;
-    }).join('');
-}
-
-// ── ACTIVITY LOG ───────────────────────────────────────────────────────────
-function addLog(msg) {
-    const t  = new Date();
-    const hm = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-    actLog.unshift({ msg, hm, who: user.name });
-    if (actLog.length > 40) actLog.pop();
-    const el = document.getElementById('logContainer');
-    el.innerHTML = actLog.map(e =>
-        `<div class="log-entry"><span class="log-user">${escHtml(e.who)}</span> ${escHtml(e.msg)}<div class="log-time">${e.hm}</div></div>`
-    ).join('');
-}
-
-// ── UTILS ──────────────────────────────────────────────────────────────────
-function setSyncStatus(live) {
-    const el = document.getElementById('syncStatus');
-    el.textContent = live ? 'AO VIVO' : 'OFFLINE';
-    el.classList.toggle('live', live);
-}
-function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-</script>
+<!-- App JS modularizado -->
+<script src="app.js" defer></script>
 </body>
 </html>

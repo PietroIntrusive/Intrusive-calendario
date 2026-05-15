@@ -126,6 +126,24 @@
         .day-cell.cell-done  { border-color: var(--green);  background: rgba(92,219,92,0.05); }
         .day-cell.cell-past:not(.cell-done) { opacity: 0.4; }
 
+        /* ── DIAS PASSADOS COM TAREFAS INCOMPLETAS ── */
+        .cell-incomplete {
+            border: 2px solid var(--orange) !important;
+            background: rgba(255, 107, 26, 0.05) !important;
+            box-shadow: inset 0 0 10px rgba(255, 107, 26, 0.1);
+            opacity: 1 !important;
+            position: relative;
+        }
+        .cell-incomplete::after {
+            content: "PENDENTE";
+            font-size: 8px;
+            color: var(--orange);
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-family: 'Space Mono', monospace;
+        }
+
         .cell-num { font-family: 'Bebas Neue'; font-size: 20px; line-height: 1; color: var(--white); }
         .cell-today .cell-num  { color: var(--orange); }
         .cell-done  .cell-num  { color: var(--green); }
@@ -133,12 +151,25 @@
         .phase-bar { width: 100%; height: 3px; border-radius: 2px; margin-top: auto; }
         .cell-badge {
             position: absolute; top: 5px; right: 6px;
-            font-size: 9px; color: var(--gray); font-family: 'Space Mono';
+            font-size: 9px; color: var(--gray); font-family: 'Space Mono', monospace;
         }
         .cell-check { position: absolute; bottom: 5px; right: 6px; font-size: 12px; color: var(--green); }
 
+        /* ── PROGRESS BAR ── */
+        .progress-container {
+            width: 100%; height: 8px;
+            background: var(--glass); border-radius: 4px;
+            margin-bottom: 25px; overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        #progressFill {
+            height: 100%; width: 0%;
+            background: var(--green);
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--green);
+        }
+
         /* ── EXPANSION OVERLAY ── */
-        /* FIX: usa visibility+opacity em vez de display+opacity (display não transiciona) */
         .expansion-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(24px);
@@ -175,6 +206,14 @@
         .task-card.task-done { opacity: 0.45; }
         .task-card.task-done .task-text { text-decoration: line-through; color: var(--gray); }
 
+        /* Tag visual para tarefas que vieram de rollover */
+        .task-card.task-rolled { border-left: 3px solid var(--orange); }
+        .task-rolled-badge {
+            font-size: 9px; color: var(--orange);
+            font-family: 'Space Mono', monospace;
+            letter-spacing: 1px; white-space: nowrap;
+        }
+
         .check-box {
             width: 22px; height: 22px; min-width: 22px;
             border: 2px solid var(--red); border-radius: 5px;
@@ -191,7 +230,6 @@
             font-size: 14px; border-radius: 4px; transition: all 0.15s;
         }
         .task-del:hover { color: var(--red); background: rgba(230,48,34,0.1); }
-
         .tasks-empty { text-align: center; padding: 36px; color: #333; font-size: 13px; letter-spacing: 3px; }
 
         /* ── BUTTONS ── */
@@ -212,6 +250,55 @@
         .btn-outline:hover { border-color: var(--red); color: var(--red); }
         .btn-outline.day-done { border-color: var(--green); color: var(--green); }
         .btn-actions { display: flex; flex-wrap: wrap; gap: 0; }
+
+        /* ── ROLLOVER TOAST ── */
+        /* É o aviso que aparece quando tarefas pendentes são movidas para hoje */
+        .rollover-toast {
+            position: fixed; bottom: 30px; right: 30px; z-index: 9998;
+            background: #0c0c0c; border: 1px solid var(--orange);
+            border-left: 4px solid var(--orange);
+            padding: 18px 20px; border-radius: 14px;
+            display: flex; align-items: flex-start; gap: 14px;
+            max-width: 380px; width: calc(100% - 60px);
+            box-shadow: 0 0 40px rgba(255,107,26,0.2);
+            transform: translateX(calc(100% + 40px));
+            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .rollover-toast.show { transform: translateX(0); }
+        .toast-icon {
+            font-size: 22px; line-height: 1; padding-top: 2px;
+            flex-shrink: 0;
+        }
+        .toast-body { flex: 1; }
+        .toast-title {
+            font-family: 'Bebas Neue'; font-size: 18px;
+            letter-spacing: 3px; color: var(--orange);
+            margin-bottom: 4px;
+        }
+        .toast-subtitle {
+            font-size: 12px; color: var(--gray);
+            letter-spacing: 1px; margin-bottom: 10px;
+        }
+        .toast-tasks {
+            font-size: 12px; color: var(--white);
+            line-height: 1.7; max-height: 100px;
+            overflow-y: auto;
+        }
+        .toast-tasks span { color: var(--orange); font-family: 'Space Mono', monospace; margin-right: 4px; }
+        .toast-close {
+            font-size: 14px; color: #444; cursor: pointer;
+            padding: 2px 4px; border-radius: 4px;
+            transition: color 0.15s; flex-shrink: 0;
+            font-family: 'Barlow Condensed';
+        }
+        .toast-close:hover { color: var(--orange); }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0;
+            height: 2px; background: var(--orange);
+            border-radius: 0 0 14px 14px;
+            animation: toastTimer 8s linear forwards;
+        }
+        @keyframes toastTimer { from { width: 100%; } to { width: 0%; } }
 
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: var(--border); }
@@ -261,9 +348,8 @@
         </div>
         <div id="exPhaseBadge" class="ex-phase-badge hidden"></div>
         <div class="progress-container">
-    <div id="progressFill"></div>
-</div>
-
+            <div id="progressFill"></div>
+        </div>
         <div id="taskList"></div>
         <div class="btn-actions">
             <button class="btn-premium" onclick="createNewTask()">+ NOVA TAREFA</button>
@@ -272,14 +358,25 @@
     </div>
 </div>
 
+<!-- ROLLOVER TOAST (aviso de tarefas movidas) -->
+<div id="rolloverToast" class="rollover-toast">
+    <div class="toast-icon">⚠</div>
+    <div class="toast-body">
+        <div class="toast-title">TAREFAS MOVIDAS</div>
+        <div class="toast-subtitle" id="toastSubtitle"></div>
+        <div class="toast-tasks" id="toastTaskList"></div>
+    </div>
+    <div class="toast-close" onclick="dismissToast()">✕</div>
+    <div class="toast-progress" id="toastProgress"></div>
+</div>
+
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────────────────
 const SB_URL = 'https://xebtpqjcpeatxkxmijgw.supabase.co';
 const SB_KEY = 'sb_publishable_CxfVXlt7AwSAOQHDkRAS4Q_QmGM0H3z';
 
-// FIX CRÍTICO: renomeado de 'supabase' para 'db'
-// O CDN já define window.supabase globalmente — redeclarar com const gera
-// "Identifier 'supabase' has already been declared" e mata todo o script.
+// IMPORTANTE: O CDN já define window.supabase globalmente.
+// Por isso usamos "db" em vez de "supabase" para evitar conflito de nome.
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 // ── ESTADO ─────────────────────────────────────────────────────────────────
@@ -287,6 +384,11 @@ let user       = { name: '', photo: '' };
 let currentDay = '';
 let actLog     = [];
 let cache      = { tasks: [], presence: [], doneDays: [] };
+let toastTimer = null;
+
+// ── TODAY (dinâmico — pega a data real do sistema) ──────────────────────────
+// ATENÇÃO: não hardcode a data. Esta linha pega sempre o dia de hoje.
+const TODAY = new Date().toISOString().split('T')[0];
 
 // ── FASES ──────────────────────────────────────────────────────────────────
 const PHASES = {
@@ -319,6 +421,11 @@ async function initCommandCenter() {
 
     setSyncStatus(false);
     await loadData();
+
+    // Roda o rollover logo após carregar os dados.
+    // Isso move tarefas pendentes de dias anteriores para hoje.
+    await rolloverTasks();
+
     renderCalendar();
     subscribeRealtime();
     heartbeat();
@@ -349,7 +456,81 @@ async function loadData() {
     }
 }
 
-// ── REALTIME (adição minha — polling a cada 20s não é realtime real) ────────
+// ── ROLLOVER ────────────────────────────────────────────────────────────────
+// Essa função verifica se há tarefas pendentes de dias anteriores.
+// Se houver, move todas para hoje e exibe um aviso na tela.
+async function rolloverTasks() {
+    // Filtra: tarefas com data anterior a hoje E que não foram concluídas
+    const pendingTasks = cache.tasks.filter(t => t.date_id < TODAY && !t.is_done);
+
+    if (pendingTasks.length === 0) return; // Nada a fazer
+
+    // Conta de quantos dias diferentes vieram essas tarefas
+    const daysAffected = [...new Set(pendingTasks.map(t => t.date_id))].length;
+
+    // Envia o update no banco: todas as tarefas incompletas e passadas
+    // vão para a data de hoje
+    const { error } = await db
+        .from('tasks')
+        .update({ date_id: TODAY })
+        .eq('is_done', false)
+        .lt('date_id', TODAY);
+
+    if (error) {
+        console.error('[INTRUSIVE] Erro no rollover:', error);
+        return;
+    }
+
+    // Recarrega o cache do banco com os dados já atualizados
+    await loadData();
+
+    // Registra no log de atividade da sidebar
+    addLog(`${pendingTasks.length} tarefa(s) pendente(s) movida(s) para hoje`);
+
+    // Exibe o toast (aviso visual no canto da tela)
+    showRolloverToast(pendingTasks, daysAffected);
+}
+
+// ── ROLLOVER TOAST ──────────────────────────────────────────────────────────
+// Mostra o aviso bonito no canto inferior direito da tela.
+// Ele some sozinho depois de 8 segundos ou se o usuário fechar.
+function showRolloverToast(tasks, daysCount) {
+    const toast    = document.getElementById('rolloverToast');
+    const subtitle = document.getElementById('toastSubtitle');
+    const taskList = document.getElementById('toastTaskList');
+    const progress = document.getElementById('toastProgress');
+
+    // Monta o texto do subtítulo
+    subtitle.textContent =
+        `${tasks.length} TAREFA${tasks.length > 1 ? 'S' : ''} DE ` +
+        `${daysCount} DIA${daysCount > 1 ? 'S' : ''} ANTERIOR${daysCount > 1 ? 'ES' : ''} → HOJE`;
+
+    // Lista até 5 tarefas pelo nome; se tiver mais mostra "e mais X"
+    const shown = tasks.slice(0, 5);
+    const extra = tasks.length - shown.length;
+    taskList.innerHTML = shown.map(t =>
+        `<div><span>›</span>${escHtml(t.task_text)}</div>`
+    ).join('') + (extra > 0 ? `<div style="color:var(--gray); margin-top:4px;">+ ${extra} mais...</div>` : '');
+
+    // Reinicia a animação da barra de progresso (o truque é recriar o elemento)
+    progress.style.animation = 'none';
+    progress.offsetHeight; // força reflow (o browser "reseta" a animação)
+    progress.style.animation = '';
+
+    // Mostra o toast
+    toast.classList.add('show');
+
+    // Auto-dismiss depois de 8 segundos
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(dismissToast, 8000);
+}
+
+function dismissToast() {
+    document.getElementById('rolloverToast').classList.remove('show');
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+}
+
+// ── REALTIME ────────────────────────────────────────────────────────────────
 function subscribeRealtime() {
     db.channel('intrusive-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
@@ -388,37 +569,51 @@ function subscribeRealtime() {
 }
 
 // ── CALENDÁRIO ─────────────────────────────────────────────────────────────
-const MONTHS   = [{y:2026,m:4,n:'MAIO'},{y:2026,m:5,n:'JUNHO'},{y:2026,m:6,n:'JULHO'}];
-const WDAYS    = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
-const TODAY    = '2026-05-12';
-function inRange(ds)  { return ds >= '2026-05-12' && ds <= '2026-07-12'; }
-function isPast(ds)   { return ds < TODAY; }
-function dStr(y,m,d)  { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+const MONTHS = [{y:2026,m:4,n:'MAIO'},{y:2026,m:5,n:'JUNHO'},{y:2026,m:6,n:'JULHO'}];
+const WDAYS  = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+function inRange(ds) { return ds >= '2026-05-12' && ds <= '2026-07-12'; }
+function isPast(ds)  { return ds < TODAY; }
+function dStr(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 
 function renderCalendar() {
     const area = document.getElementById('calendarArea');
     area.innerHTML = '';
     MONTHS.forEach(({ y, m, n }) => {
-        const firstDay  = new Date(y, m, 1).getDay();
-        const lastDay   = new Date(y, m + 1, 0).getDate();
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDay  = new Date(y, m + 1, 0).getDate();
         let html = `<div class="month-section">
             <div class="month-header">${n.slice(0,-1)}<span>${n.slice(-1)}</span> ${y}</div>
             <div class="weekdays-row">${WDAYS.map(w=>`<div class="weekday-lbl">${w}</div>`).join('')}</div>
             <div class="days-grid">`;
         for (let i = 0; i < firstDay; i++) html += '<div class="day-cell cell-empty"></div>';
         for (let d = 1; d <= lastDay; d++) {
-            const ds    = dStr(y, m, d);
-            const ir    = inRange(ds);
-            const ph    = getPhase(ds);
-            const done  = cache.doneDays.includes(ds);
-            const today = ds === TODAY;
-            const past  = isPast(ds);
-            const tCnt  = cache.tasks.filter(t => t.date_id === ds).length;
-            if (!ir) { html += `<div class="day-cell cell-outrange"><div class="cell-num">${d}</div></div>`; continue; }
+            const ds       = dStr(y, m, d);
+            const ir       = inRange(ds);
+            const ph       = getPhase(ds);
+            const done     = cache.doneDays.includes(ds);
+            const today    = ds === TODAY;
+            const past     = isPast(ds);
+            const dayTasks = cache.tasks.filter(t => t.date_id === ds);
+            const tCnt     = dayTasks.length;
+            const hasOpen  = dayTasks.some(t => !t.is_done);
+
+            if (!ir) {
+                html += `<div class="day-cell cell-outrange"><div class="cell-num">${d}</div></div>`;
+                continue;
+            }
+
             let cls = 'day-cell';
-            if      (done)  cls += ' cell-done';
-            else if (today) cls += ' cell-today';
-            else if (past)  cls += ' cell-past';
+            if (done) {
+                cls += ' cell-done';
+            } else if (today) {
+                cls += ' cell-today';
+            } else if (past && hasOpen) {
+                // Dia passado com tarefas ainda abertas → destaque laranja
+                cls += ' cell-incomplete';
+            } else if (past) {
+                cls += ' cell-past';
+            }
+
             const phColor = ph ? ph.color : 'transparent';
             html += `<div class="${cls}" onclick="openDay('${ds}')">
                 ${tCnt > 0 ? `<div class="cell-badge">${tCnt}</div>` : ''}
@@ -435,13 +630,13 @@ function renderCalendar() {
 // ── OVERLAY DO DIA ─────────────────────────────────────────────────────────
 function openDay(ds) {
     currentDay = ds;
-    const d  = new Date(ds + 'T00:00:00');
+    const d = new Date(ds + 'T00:00:00');
     document.getElementById('exDate').textContent =
         `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
     const ph    = getPhase(ds);
     const badge = document.getElementById('exPhaseBadge');
     if (ph) {
-        badge.textContent     = `FASE ${ph.num} — ${ph.name}`;
+        badge.textContent      = `FASE ${ph.num} — ${ph.name}`;
         badge.style.background = ph.color + '20';
         badge.style.border     = `1px solid ${ph.color}`;
         badge.style.color      = ph.color;
@@ -452,6 +647,7 @@ function openDay(ds) {
     document.getElementById('dayExpansion').classList.add('show');
     renderTasks();
     updateDayDoneBtn();
+    updateDayProgress();
 }
 
 function closeDay() { document.getElementById('dayExpansion').classList.remove('show'); }
@@ -468,6 +664,41 @@ function updateDayDoneBtn() {
     }
 }
 
+// ── PROGRESSO DO DIA ────────────────────────────────────────────────────────
+async function updateDayProgress() {
+    const dayTasks     = cache.tasks.filter(t => t.date_id === currentDay);
+    const total        = dayTasks.length;
+    const completed    = dayTasks.filter(t => t.is_done).length;
+    const allDone      = total > 0 && completed === total;
+    const progress     = total > 0 ? (completed / total) * 100 : 0;
+    const alreadyDone  = cache.doneDays.includes(currentDay);
+
+    // Atualiza a barra visual
+    const bar = document.getElementById('progressFill');
+    if (bar) bar.style.width = `${progress}%`;
+
+    // Se completou 100%: marca o dia automaticamente no banco
+    if (allDone && !alreadyDone) {
+        const { error } = await db.from('done_days').insert({
+            date_id: currentDay,
+            marked_by: user.name
+        });
+        if (!error) {
+            cache.doneDays.push(currentDay);
+            addLog(`Dia ${currentDay} concluído automaticamente (100%)`);
+        }
+    }
+
+    // Se desmarcou alguma tarefa: remove o dia da lista de concluídos
+    if (!allDone && alreadyDone) {
+        await db.from('done_days').delete().eq('date_id', currentDay);
+        cache.doneDays = cache.doneDays.filter(d => d !== currentDay);
+    }
+
+    updateDayDoneBtn();
+    renderCalendar();
+}
+
 // ── TAREFAS ────────────────────────────────────────────────────────────────
 function renderTasks() {
     const dayTasks = cache.tasks.filter(t => t.date_id === currentDay);
@@ -476,43 +707,27 @@ function renderTasks() {
         list.innerHTML = '<div class="tasks-empty">NENHUMA TAREFA — ADICIONE UMA</div>';
         return;
     }
-    list.innerHTML = dayTasks.map(t => `
-        <div class="task-card ${t.is_done ? 'task-done' : ''}">
-            <div class="check-box ${t.is_done ? 'checked' : ''}" onclick="toggleTask('${t.id}')">${t.is_done ? '✓' : ''}</div>
-            <div class="task-text">${escHtml(t.task_text)}</div>
+    // Tarefas com rolled_from preenchido vieram de outro dia via rollover
+    list.innerHTML = dayTasks.map(t => {
+        const isRolled = t.rolled_from ? true : false;
+        const rolledBadge = isRolled
+            ? `<div class="task-rolled-badge">↑ ${t.rolled_from}</div>`
+            : '';
+        return `
+        <div class="task-card ${t.is_done ? 'task-done' : ''} ${isRolled ? 'task-rolled' : ''}">
+            <div class="check-box ${t.is_done ? 'checked' : ''}" onclick="toggleTask('${t.id}')">
+                ${t.is_done ? '✓' : ''}
+            </div>
+            <div class="task-text">
+                ${escHtml(t.task_text)}
+                ${rolledBadge}
+            </div>
             <div class="task-author">${escHtml(t.created_by || '')}</div>
             <div class="task-del" onclick="deleteTask('${t.id}')">✕</div>
-        </div>`).join('');
-}
-async function updateDayProgress() {
-    const dayTasks = cache.tasks.filter(t => t.date_id === currentDay);
-    if (dayTasks.length === 0) return;
-
-    const doneTasks = dayTasks.filter(t => t.is_done);
-    const progress = Math.round((doneTasks.length / dayTasks.length) * 100);
-
-    // Atualiza a barra visualmente
-    const fill = document.getElementById('progressFill');
-    if (fill) fill.style.width = progress + "%";
-
-    // Atualiza o texto do botão
-    const btn = document.getElementById('dayDoneBtn');
-    if (btn) btn.innerHTML = progress === 100 ? "✓ DIA CONCLUÍDO" : `CONCLUIR DIA (${progress}%)`;
-
-    // AUTOMAÇÃO EXTRA: Se chegou em 100% e o dia ainda não está na tabela 'done_days'
-    if (progress === 100) {
-        const jaEstaConcluido = cache.doneDays.some(d => d.date_id === currentDay);
-        if (!jaEstaConcluido) {
-            console.log("Automação: Marcando dia como concluído no banco...");
-            await db.from('done_days').upsert({ 
-                date_id: currentDay, 
-                marked_by: user.name 
-            });
-        }
-    }
+        </div>`;
+    }).join('');
 }
 
-   
 async function createNewTask() {
     const txt = prompt('Nova tarefa:');
     if (!txt || !txt.trim()) return;
@@ -524,24 +739,28 @@ async function createNewTask() {
     addLog(`Você adicionou tarefa em ${currentDay}`);
     await loadData();
     renderTasks();
-    renderCalendar();
+    await updateDayProgress();
 }
 
 async function toggleTask(id) {
     const task = cache.tasks.find(t => t.id === id);
     if (!task) return;
     const { error } = await db.from('tasks').update({ is_done: !task.is_done }).eq('id', id);
-    if (!error) { task.is_done = !task.is_done; renderTasks();
-renderCalendar();
-updateDayProgress(); }
+    if (!error) {
+        task.is_done = !task.is_done;
+        renderTasks();
+        await updateDayProgress();
+    }
 }
 
 async function deleteTask(id) {
     if (!confirm('Excluir esta tarefa?')) return;
     const { error } = await db.from('tasks').delete().eq('id', id);
-    if (!error) { cache.tasks = cache.tasks.filter(t => t.id !== id); renderTasks();
-renderCalendar();
-updateDayProgress(); }
+    if (!error) {
+        cache.tasks = cache.tasks.filter(t => t.id !== id);
+        renderTasks();
+        await updateDayProgress();
+    }
 }
 
 async function toggleDayDone() {
@@ -582,8 +801,8 @@ function updatePresenceBar() {
 
 // ── ACTIVITY LOG ───────────────────────────────────────────────────────────
 function addLog(msg) {
-    const t   = new Date();
-    const hm  = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const t  = new Date();
+    const hm = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
     actLog.unshift({ msg, hm, who: user.name });
     if (actLog.length > 40) actLog.pop();
     const el = document.getElementById('logContainer');
